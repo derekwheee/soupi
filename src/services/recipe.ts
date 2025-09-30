@@ -35,24 +35,74 @@ async function parseIngredients(arg: number | RecipeWithIngredients): Promise<Re
 
     const parsedIngredients = JSON.parse(result.stdout);
 
-    recipe.ingredients = recipe.ingredients.map((ingredient) => {
+    const ingredients = recipe.ingredients.map((ingredient) => {
         const parsed = parsedIngredients.find((parsed: { sentence: string }) => parsed.sentence === ingredient.sentence);
         console.log(parsed);
 
         return {
             ...ingredient,
+            item: parsed?.name?.[0].text,
             size: parsed?.size?.text,
             amount: parsed?.amount[0]?.quantity,
+            unit: parsed?.amount[0]?.unit,
             preparation: parsed?.preparation?.text,
             json: parsed
         };
     });
 
-    return recipe;
+    const updates = ingredients.map(({ id, ...ingredient }) =>
+        prisma.ingredient.update({
+            where: { id },
+            data: ingredient
+        }));
+
+    await Promise.all(updates);
+
+    const updatedRecipe = await prisma.recipe.findUniqueOrThrow({
+        where: { id: recipe.id },
+        include: { ingredients: true },
+    });
+
+    return updatedRecipe;
 }
 
 export const recipeService = {
     getAllRecipes: async (): Promise<RecipeWithIngredients[]> =>
-        prisma.recipe.findMany({ include: { ingredients: true } }),
+        prisma.recipe.findMany({
+            include: {ingredients: true }
+        }),
+    getRecipe: async (id: number): Promise<RecipeWithIngredients> =>
+        prisma.recipe.findUniqueOrThrow({
+            where: { id },
+            include: { ingredients: true }
+        }),
+    createRecipe: async (data: RecipeWithIngredients): Promise<RecipeWithIngredients> => {
+
+        const { id, ingredients, ...recipe } = data;
+
+        const newRecipe = await prisma.recipe.create({
+            data: {
+                name: recipe.name,
+                prepTime: recipe.prepTime,
+                cookTime: recipe.cookTime,
+                servings: recipe.servings,
+                instructions: JSON.stringify(recipe.instructions)
+            }
+        });
+
+        const newIngredients = await prisma.ingredient.createManyAndReturn({
+            data: [
+                ...ingredients.map((i) => ({
+                    recipeId: newRecipe.id,
+                    sentence: i.sentence
+                }))
+            ]
+        });
+
+        return parseIngredients({
+            ...newRecipe,
+            ingredients: newIngredients
+        });
+    },
     parseIngredients
 };

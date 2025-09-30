@@ -3,7 +3,7 @@ model Ingredient {
     sentence    String    @default("")
     item        String?
     size        String?
-    amount      String?
+    amount      Decimal?
     unit        String?
     preparation String?
     json        Json?

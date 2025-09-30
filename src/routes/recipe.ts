@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { listRecipes, parseIngredients } from '../controllers/recipe';
+import { createRecipe, getAllRecipes, getRecipe, parseIngredients } from '../controllers/recipe';
 
 const router = Router();
 
-// GET /recipes
-router.get('/', listRecipes);
-router.get('/parse', parseIngredients)
+router.post('/', createRecipe)
+router.get('/', getAllRecipes);
+router.get('/:id', getRecipe);
+router.get('/parse/:id', parseIngredients)
 
 export default router;
