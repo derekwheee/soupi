@@ -1,0 +1,33 @@
+{
+  "name": "express",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon src/server.ts"
+  },
+  "imports": {
+    "#*": "./src/*"
+  },
+  "dependencies": {
+    "@prisma/client": "6.9.0",
+    "@prisma/extension-accelerate": "2.0.2",
+    "express": "5.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@types/express": "5.0.3",
+    "@types/node": "22.15.32",
+    "eslint": "^9.36.0",
+    "eslint-plugin-perfectionist": "^4.15.0",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2",
+    "prisma": "6.9.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.8.2",
+    "typescript-eslint": "^8.45.0"
+  },
+  "prisma": {
+    "schema": "./prisma/schema",
+    "seed": "ts-node prisma/seed.ts"
+  }
+}
