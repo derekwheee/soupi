@@ -1,44 +1,35 @@
 import { Request, Response } from 'express';
-import { recipeService } from '../services/recipe';
+import * as recipeService from '../services/recipe';
+import { controller } from './helpers';
 
 export async function createRecipe(req: Request, res: Response) {
-    try {
-        const data = req.body;
-        const recipe = await recipeService.createRecipe(data);
-        res.json(recipe);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Could not create recipe' });
-    }
+    return await controller(req, res, () => recipeService.createRecipe(req.body));
+}
+
+export async function createRecipeFromUrl(req: Request, res: Response) {
+    return await controller(req, res, async () => {
+        const queryUrl = (req.query && (req.query.url as string)) as string | undefined;
+
+        if (!queryUrl || typeof queryUrl !== 'string') {
+            return res.status(400).json({ error: 'url query parameter is required' });
+        }
+
+        // Decode if encoded; decodeURIComponent is a no-op for plain strings
+        let url: string;
+        try {
+            url = decodeURIComponent(queryUrl);
+        } catch (e) {
+            url = queryUrl;
+        }
+
+        return await recipeService.createRecipeFromUrl(url);
+    });
 }
 
 export async function getAllRecipes(req: Request, res: Response) {
-    try {
-        const recipes = await recipeService.getAllRecipes();
-        res.json(recipes);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to fetch recipes' });
-    }
+    return await controller(req, res, recipeService.getAllRecipes);
 }
 
 export async function getRecipe(req: Request, res: Response) {
-    try {
-        const recipe = await recipeService.getRecipe(Number(req.params.id));
-        res.json(recipe);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to fetch recipe' });
-    }
-}
-
-export async function parseIngredients(req: Request, res: Response) {
-    try {
-        const recipeId = Number(req.params.id);
-        const recipe = await recipeService.parseIngredients(recipeId);
-        res.json(recipe)
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to parse recipe ingredients' });
-    }
+    return await controller(req, res, () => recipeService.getRecipe(Number(req.params.id)));
 }

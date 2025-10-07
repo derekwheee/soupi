@@ -1,12 +1,15 @@
 import { Request, Response } from 'express';
-import { pantryService } from '../services/pantry';
+import * as pantryService from '../services/pantry';
+import { controller } from './helpers';
 
 export async function getAllPantryItems(req: Request, res: Response) {
-    try {
-        const pantry = await pantryService.getAllPantryItems();
-        res.json(pantry);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to fetch pantry' });
-    }
+    return await controller(req, res, pantryService.getAllPantryItems);
+}
+
+export async function getPantryItem(req: Request, res: Response) {
+    return await controller(req, res, () => pantryService.getPantryItem(Number(req.params.id)));
+}
+
+export async function upsertPantryItem(req: Request, res: Response) {
+    return await controller(req, res, () => pantryService.upsertPantryItem(req.body));
 }
