@@ -17,9 +17,6 @@ export async function getPantryItem(id: number): Promise<PantryItem> {
 export async function upsertPantryItem(item: PantryItem): Promise<PantryItem> {
     const { id, ...data } = item;
 
-    console.log(id);
-    console.log(data);
-
     if (id) {
         const existing = await prisma.pantryItem.findUnique({ where: { id } });
         if (existing) {
