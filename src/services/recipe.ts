@@ -7,25 +7,27 @@ type RecipeWithIngredients = Prisma.RecipeGetPayload<{
     include: { ingredients: true }
 }>;
 
-export async function getAllRecipes(): Promise<RecipeWithIngredients[]> {
+export async function getAllRecipes(userId: string): Promise<RecipeWithIngredients[]> {
     return prisma.recipe.findMany({
+        where: { userId },
         include: { ingredients: true }
     });
 }
 
-export async function getRecipe(id: number): Promise<RecipeWithIngredients> {
+export async function getRecipe(userId: string, id: number): Promise<RecipeWithIngredients> {
     return prisma.recipe.findUniqueOrThrow({
-        where: { id },
+        where: { id, userId },
         include: { ingredients: true }
     });
 }
 
-export async function createRecipe(data: any): Promise<RecipeWithIngredients> {
+export async function createRecipe(userId: string, data: any): Promise<RecipeWithIngredients> {
 
     const { id, ingredients, ...recipe } = data;
 
     const newRecipe = await prisma.recipe.create({
         data: {
+            userId,
             name: recipe.name,
             prepTime: recipe.prepTime,
             cookTime: recipe.cookTime,
@@ -44,6 +46,7 @@ export async function createRecipe(data: any): Promise<RecipeWithIngredients> {
     const newIngredients = await prisma.ingredient.createManyAndReturn({
         data: [
             ...ingredients.map((sentence: string) => ({
+                userId,
                 recipeId: newRecipe.id,
                 sentence
             }))
@@ -56,10 +59,11 @@ export async function createRecipe(data: any): Promise<RecipeWithIngredients> {
     });
 }
 
-export async function createRecipeFromUrl(url: string): Promise<RecipeWithIngredients> {
+export async function createRecipeFromUrl(userId: string, url: string): Promise<RecipeWithIngredients> {
     const recipeData = await scrapeRecipe(url);
 
     const recipe = {
+        userId,
         name: recipeData.name || 'Untitled Recipe',
         prepTime: recipeData.prepTime,
         cookTime: recipeData.cookTime,
@@ -68,5 +72,5 @@ export async function createRecipeFromUrl(url: string): Promise<RecipeWithIngred
         ingredients: recipeData.ingredients
     };
 
-    return createRecipe(recipe);
+    return createRecipe(userId, recipe);
 }

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { getAuth } from '@clerk/express'
 
 export async function controller(
     req: Request,
@@ -6,7 +7,9 @@ export async function controller(
     fn: Function
 ): Promise<void> {
     try {
-        const json = await fn();
+        const { userId } = getAuth(req);
+
+        const json = await fn(userId);
         res.json(json);
     } catch (error) {
         console.error(error);

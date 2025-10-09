@@ -3,20 +3,26 @@ import { withAccelerate } from '@prisma/extension-accelerate'
 import { parseIngredients } from '../src/services/ingredient';
 import { createRecipeFromUrl } from '../src/services/recipe';
 
+const userId: string | undefined = process.env.SEED_USER_ID;
+
+if (!userId) {
+    throw new Error("Please set the SEED_USER_ID environment variable to your Clerk user ID.");
+}
+
 const prisma = new PrismaClient().$extends(withAccelerate());
 
-const categories: Prisma.ItemCategoryCreateInput[] = [
-    { name: 'Produce', sortOrder: 0, icon: '🍎' },
-    { name: 'Bakery', sortOrder: 1, icon: '🍞' },
-    { name: 'Deli', sortOrder: 2, icon: '🧀' },
-    { name: 'Meat & Seafood', sortOrder: 3, icon: '🍖' },
-    { name: 'Grocery', sortOrder: 4, icon: '🥫' },
-    { name: 'Beverages', sortOrder: 5, icon: '🧃' },
-    { name: 'Dairy', sortOrder: 6, icon: '🥛' },
-    { name: 'Frozen', sortOrder: 7, icon: '🍦' },
-    { name: 'Household', sortOrder: 8, icon: '🧴', isNonFood: true },
-    { name: 'Personal Care', sortOrder: 9, icon: '🪥', isNonFood: true },
-    { name: 'Other', sortOrder: 10, icon: '🛒' }
+const categories: Prisma.ItemCategoryUncheckedCreateInput[] = [
+    { userId, name: 'Produce', sortOrder: 0, icon: '🍎' },
+    { userId, name: 'Bakery', sortOrder: 1, icon: '🍞' },
+    { userId, name: 'Deli', sortOrder: 2, icon: '🧀' },
+    { userId, name: 'Meat & Seafood', sortOrder: 3, icon: '🍖' },
+    { userId, name: 'Grocery', sortOrder: 4, icon: '🥫' },
+    { userId, name: 'Beverages', sortOrder: 5, icon: '🧃' },
+    { userId, name: 'Dairy', sortOrder: 6, icon: '🥛' },
+    { userId, name: 'Frozen', sortOrder: 7, icon: '🍦' },
+    { userId, name: 'Household', sortOrder: 8, icon: '🧴', isNonFood: true },
+    { userId, name: 'Personal Care', sortOrder: 9, icon: '🪥', isNonFood: true },
+    { userId, name: 'Other', sortOrder: 10, icon: '🛒' }
 ];
 
 const recipeUrls: string[] = [
@@ -24,8 +30,9 @@ const recipeUrls: string[] = [
     'https://www.allrecipes.com/recipe/214561/beans-beans-and-beans/',
 ];
 
-const recipeData: Prisma.RecipeCreateInput[] = [
+const recipeData: Prisma.RecipeUncheckedCreateInput[] = [
     {
+        userId,
         name: 'Pancakes',
         cookTime: '15 mins',
         prepTime: '20 mins',
@@ -33,27 +40,35 @@ const recipeData: Prisma.RecipeCreateInput[] = [
         ingredients: {
             create: [
                 {
+                    userId,
                     sentence: '2 cups all-purpose flour'
                 },
                 {
+                    userId,
                     sentence: '1 1/2 cups milk'
                 },
                 {
+                    userId,
                     sentence: '2 teaspoons baking powder'
                 },
                 {
+                    userId,
                     sentence: '1/2 teaspoon salt'
                 },
                 {
+                    userId,
                     sentence: '1 tablespoon baking soda'
                 },
                 {
+                    userId,
                     sentence: '1/4 cup melted butter'
                 },
                 {
+                    userId,
                     sentence: '2 tablespoons sugar'
                 },
                 {
+                    userId,
                     sentence: '2 large eggs'
                 },
             ]
@@ -69,6 +84,7 @@ const recipeData: Prisma.RecipeCreateInput[] = [
         ]
     },
     {
+        userId,
         name: 'Avocado Toast',
         cookTime: '5 mins',
         prepTime: '10 mins',
@@ -76,18 +92,23 @@ const recipeData: Prisma.RecipeCreateInput[] = [
         ingredients: {
             create: [
                 {
+                    userId,
                     sentence: '2 slices whole grain bread'
                 },
                 {
+                    userId,
                     sentence: '1 ripe avocado'
                 },
                 {
+                    userId,
                     sentence: '1 tablespoon olive oil'
                 },
                 {
+                    userId,
                     sentence: '1 teaspoon lemon juice'
                 },
                 {
+                    userId,
                     sentence: 'Salt and pepper to taste'
                 },
             ]
@@ -103,19 +124,19 @@ const recipeData: Prisma.RecipeCreateInput[] = [
 ];
 
 const pantryItemData: Prisma.PantryItemCreateInput[] = [
-    { name: 'all-purpose flour', category: { connect: { name: 'Grocery' } } },
-    { name: 'sugar', category: { connect: { name: 'Grocery' } } },
-    { name: 'eggs', category: { connect: { name: 'Dairy' } } },
-    { name: 'milk', category: { connect: { name: 'Dairy' } } },
-    { name: 'whole grain bread', category: { connect: { name: 'Bakery' } } },
-    { name: 'avocado', category: { connect: { name: 'Produce' } } },
-    { name: 'olive oil', category: { connect: { name: 'Grocery' } } },
-    { name: 'lemon juice', category: { connect: { name: 'Grocery' } } },
-    { name: 'salt', category: { connect: { name: 'Grocery' } } },
-    { name: 'pepper', category: { connect: { name: 'Grocery' } } },
-    { name: 'baking powder', isInStock: false, isInShoppingList: true, category: { connect: { name: 'Grocery' } } },
-    { name: 'baking soda', isInStock: false, isInShoppingList: true, category: { connect: { name: 'Grocery' } } },
-    { name: 'butter', isInStock: false, isInShoppingList: true, category: { connect: { name: 'Dairy' } } }
+    { name: 'all-purpose flour', category: { connect: { name: 'Grocery' } }, user: { connect: { id: userId }} },
+    { name: 'sugar', category: { connect: { name: 'Grocery' } }, user: { connect: { id: userId }} },
+    { name: 'eggs', category: { connect: { name: 'Dairy' } }, user: { connect: { id: userId }} },
+    { name: 'milk', category: { connect: { name: 'Dairy' } }, user: { connect: { id: userId }} },
+    { name: 'whole grain bread', category: { connect: { name: 'Bakery' } }, user: { connect: { id: userId }} },
+    { name: 'avocado', category: { connect: { name: 'Produce' } }, user: { connect: { id: userId }} },
+    { name: 'olive oil', category: { connect: { name: 'Grocery' } }, user: { connect: { id: userId }} },
+    { name: 'lemon juice', category: { connect: { name: 'Grocery' } }, user: { connect: { id: userId }} },
+    { name: 'salt', category: { connect: { name: 'Grocery' } }, user: { connect: { id: userId }} },
+    { name: 'pepper', category: { connect: { name: 'Grocery' } }, user: { connect: { id: userId }} },
+    { name: 'baking powder', isInStock: false, isInShoppingList: true, category: { connect: { name: 'Grocery' } }, user: { connect: { id: userId }} },
+    { name: 'baking soda', isInStock: false, isInShoppingList: true, category: { connect: { name: 'Grocery' } }, user: { connect: { id: userId }} },
+    { name: 'butter', isInStock: false, isInShoppingList: true, category: { connect: { name: 'Dairy' } }, user: { connect: { id: userId }} }
 ];
 
 async function main() {
@@ -124,7 +145,7 @@ async function main() {
     // Seed categories
     for (const c of categories) {
         const existingCategory = await prisma.itemCategory.findFirst({
-            where: { name: c.name },
+            where: { name: c.name, userId },
         });
 
         if (existingCategory) {
@@ -141,7 +162,7 @@ async function main() {
     // Seed recipes
     for (const u of recipeData) {
         const existingRecipe = await prisma.recipe.findFirst({
-            where: { name: u.name },
+            where: { name: u.name, userId },
         });
 
         if (existingRecipe) {
@@ -162,7 +183,7 @@ async function main() {
     // Seed recipes from URLs
     for (const url of recipeUrls) {
         try {
-            await createRecipeFromUrl(url);
+            await createRecipeFromUrl(userId!, url);
             console.log(`Created recipe from URL: ${url}`);
         } catch (error) {
             console.error(`Failed to create recipe from URL ${url}:`, error);
@@ -172,7 +193,7 @@ async function main() {
     // Seed pantry items
     for (const u of pantryItemData) {
         const existingPantryItem = await prisma.pantryItem.findFirst({
-            where: { name: u.name },
+            where: { name: u.name, userId },
         });
 
         if (existingPantryItem) {

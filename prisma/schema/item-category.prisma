@@ -8,4 +8,6 @@ model ItemCategory {
     updatedAt   DateTime     @updatedAt
     deletedAt   DateTime?
     pantryItems PantryItem[]
+    user        User      @relation(fields: [userId], references: [id])
+    userId      String
 }
