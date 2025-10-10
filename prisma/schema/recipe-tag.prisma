@@ -1,0 +1,7 @@
+model RecipeTag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  recipes   Recipe[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

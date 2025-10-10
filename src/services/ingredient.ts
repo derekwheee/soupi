@@ -2,18 +2,18 @@ import { Prisma } from '@prisma/client';
 import prisma from '../../prisma';
 import { spawnSync } from 'node:child_process';
 
-type RecipeWithIngredients = Prisma.RecipeGetPayload<{
-    include: { ingredients: true }
+type RecipeWithJoins = Prisma.RecipeGetPayload<{
+    include: { ingredients: true, tags: true }
 }>;
 
-export async function parseIngredients(recipeId: number): Promise<RecipeWithIngredients>;
-export async function parseIngredients(recipe: RecipeWithIngredients): Promise<RecipeWithIngredients>;
-export async function parseIngredients(arg: number | RecipeWithIngredients): Promise<RecipeWithIngredients> {
-    const recipe: RecipeWithIngredients =
+export async function parseIngredients(recipeId: number): Promise<RecipeWithJoins>;
+export async function parseIngredients(recipe: RecipeWithJoins): Promise<RecipeWithJoins>;
+export async function parseIngredients(arg: number | RecipeWithJoins): Promise<RecipeWithJoins> {
+    const recipe: RecipeWithJoins =
         typeof arg === 'number'
             ? await prisma.recipe.findUniqueOrThrow({
                 where: { id: arg },
-                include: { ingredients: true },
+                include: { ingredients: true, tags: true },
             })
             : arg;
 
@@ -59,7 +59,7 @@ export async function parseIngredients(arg: number | RecipeWithIngredients): Pro
 
     const updatedRecipe = await prisma.recipe.findUniqueOrThrow({
         where: { id: recipe.id },
-        include: { ingredients: true },
+        include: { ingredients: true, tags: true },
     });
 
     return updatedRecipe;

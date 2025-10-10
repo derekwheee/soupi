@@ -1,9 +1,9 @@
 import { ItemCategory } from '@prisma/client';
 import prisma from '../../prisma';
 
-export async function getItemCategories(): Promise<ItemCategory[]> {
+export async function getItemCategories(pantryId: number): Promise<ItemCategory[]> {
     return prisma.itemCategory.findMany({
-        where: { deletedAt: null },
+        where: { deletedAt: null, pantryId },
         orderBy: { sortOrder: 'asc' },
         include: {
             pantryItems: { 
