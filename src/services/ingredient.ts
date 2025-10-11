@@ -19,7 +19,7 @@ export async function parseIngredients(arg: number | RecipeWithJoins): Promise<R
 
     const ingredientSentences = recipe.ingredients.map(({ sentence }) => sentence);
 
-    const python = process.env.NLP_PYTHON_PATH;
+    const python = process.env.NLP_PYTHON_PATH || 'python';
     const parser = process.env.NLP_PARSER_PATH;
     if (!python || !parser) throw new Error('NLP_PYTHON_PATH and NLP_PARSER_PATH are required');
 

@@ -2,3 +2,7 @@ node_modules/
 dist/
 *.env*
 stash/
+python/venv/
+python/__pycache__/
+python/*.pyc
+.DS_Store
