@@ -33,6 +33,7 @@ async function main() {
     const pantry = await prisma.pantry.create({
         data: {
             name: "My Pantry",
+            isDefault: true,
             members: { connect: { id: user.id! } },
         }
     });

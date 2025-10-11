@@ -55,3 +55,27 @@ export async function getPantryCategories(pantryId: number) {
         }
     });
 }
+
+export async function createSharedPantry(userIdA: string, userIdB: string): Promise<Pantry> {
+
+    // Set isDefault to false on existing default pantries for both users
+    await prisma.pantry.updateMany({
+        where: { isDefault: true, members: { some: { id: userIdA } } },
+        data: { isDefault: false }
+    });
+
+    await prisma.pantry.updateMany({
+        where: { isDefault: true, members: { some: { id: userIdB } } },
+        data: { isDefault: false }
+    });
+
+    return await prisma.pantry.create({
+        data: {
+            name: `Shared Pantry`,
+            isDefault: true,
+            members: {
+                connect: [{ id: userIdA }, { id: userIdB }]
+            }
+        }
+    });
+}
