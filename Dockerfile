@@ -19,15 +19,15 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY package.json ./
 COPY python/requirements.txt ./python/requirements.txt
 
+# Copy the rest of the application code
+COPY . .
+
 # Install Node.js dependencies
 RUN if [ -f package.json ]; then npm install; fi
 
 # Upgrade pip inside venv and install Python deps into the venv
 RUN pip install --upgrade pip setuptools wheel
 RUN if [ -f python/requirements.txt ]; then pip install -r python/requirements.txt; fi
-
-# Copy the rest of the application code
-COPY . .
 
 # Make parser executable
 RUN chmod +x python/parser.py
