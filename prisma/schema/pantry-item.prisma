@@ -1,15 +1,15 @@
 model PantryItem {
-  id               Int           @id @default(autoincrement())
-  name             String
-  isInStock        Boolean       @default(true)
-  isFavorite       Boolean       @default(false)
-  isInShoppingList Boolean       @default(false)
-  purchasedAt      DateTime?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  deletedAt        DateTime?
-  categoryId       Int?
-  category         ItemCategory? @relation(fields: [categoryId], references: [id])
-  pantryId         Int
-  pantry           Pantry        @relation(fields: [pantryId], references: [id])
+    id               Int           @id @default(autoincrement())
+    name             String
+    isInStock        Boolean       @default(true)
+    isFavorite       Boolean       @default(false)
+    isInShoppingList Boolean       @default(false)
+    purchasedAt      DateTime?
+    createdAt        DateTime      @default(now())
+    updatedAt        DateTime      @updatedAt
+    deletedAt        DateTime?
+    categoryId       Int?
+    category         ItemCategory? @relation(fields: [categoryId], references: [id])
+    pantryId         Int
+    pantry           Pantry        @relation(fields: [pantryId], references: [id])
 }

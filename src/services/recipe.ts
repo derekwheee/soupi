@@ -10,9 +10,9 @@ type RecipeWithJoins = Prisma.RecipeGetPayload<{
     };
 }>;
 
-export async function getAllRecipes(userId: string): Promise<RecipeWithJoins[]> {
+export async function getAllRecipes(householdId: number): Promise<RecipeWithJoins[]> {
     return prisma.recipe.findMany({
-        where: { userId },
+        where: { householdId },
         include: {
             ingredients: true,
             tags: true
@@ -20,9 +20,9 @@ export async function getAllRecipes(userId: string): Promise<RecipeWithJoins[]> 
     });
 }
 
-export async function getRecipe(userId: string, id: number): Promise<RecipeWithJoins> {
+export async function getRecipe(householdId: number, id: number): Promise<RecipeWithJoins> {
     return prisma.recipe.findUniqueOrThrow({
-        where: { id, userId },
+        where: { id, householdId },
         include: {
             ingredients: true,
             tags: true
@@ -30,13 +30,13 @@ export async function getRecipe(userId: string, id: number): Promise<RecipeWithJ
     });
 }
 
-export async function createRecipe(userId: string, data: any): Promise<RecipeWithJoins> {
+export async function createRecipe(householdId: number, data: any): Promise<RecipeWithJoins> {
 
     const { id, ingredients, ...recipe } = data;
 
     const newRecipe = await prisma.recipe.create({
         data: {
-            userId,
+            householdId,
             name: recipe.name,
             prepTime: recipe.prepTime,
             cookTime: recipe.cookTime,
@@ -56,7 +56,6 @@ export async function createRecipe(userId: string, data: any): Promise<RecipeWit
     const newIngredients = await prisma.ingredient.createManyAndReturn({
         data: [
             ...ingredients.map((sentence: string) => ({
-                userId,
                 recipeId: newRecipe.id,
                 sentence
             }))
@@ -70,11 +69,11 @@ export async function createRecipe(userId: string, data: any): Promise<RecipeWit
     });
 }
 
-export async function createRecipeFromUrl(userId: string, url: string): Promise<RecipeWithJoins> {
+export async function createRecipeFromUrl(householdId: number, url: string): Promise<RecipeWithJoins> {
     const recipeData = await scrapeRecipe(url);
 
     const recipe = {
-        userId,
+        householdId,
         name: recipeData.name || 'Untitled Recipe',
         prepTime: parseTimes(recipeData.prepTime),
         cookTime: parseTimes(recipeData.cookTime),
@@ -83,7 +82,7 @@ export async function createRecipeFromUrl(userId: string, url: string): Promise<
         ingredients: recipeData.ingredients
     };
 
-    return createRecipe(userId, recipe);
+    return createRecipe(householdId, recipe);
 }
 
 const parseTimes = (time?: string | null | undefined) => {

@@ -29,12 +29,20 @@ async function main() {
         console.log(`Created user with id: ${userId}`)
     }
 
+    const household = await prisma.household.create({
+        data: {
+            name: "My Household",
+            isDefault: true,
+            members: { connect: { id: user.id! } },
+        }
+    })
+
     // Create default pantry
     const pantry = await prisma.pantry.create({
         data: {
             name: "My Pantry",
             isDefault: true,
-            members: { connect: { id: user.id! } },
+            household: { connect: { id: household.id } }
         }
     });
 
@@ -67,45 +75,21 @@ async function main() {
 
     const recipeData: Prisma.RecipeUncheckedCreateInput[] = [
         {
-            userId,
+            householdId: household.id,
             name: 'Pancakes',
             cookTime: '15 mins',
             prepTime: '20 mins',
             servings: 4,
             ingredients: {
                 create: [
-                    {
-                        userId,
-                        sentence: '2 cups all-purpose flour'
-                    },
-                    {
-                        userId,
-                        sentence: '1 1/2 cups milk'
-                    },
-                    {
-                        userId,
-                        sentence: '2 teaspoons baking powder'
-                    },
-                    {
-                        userId,
-                        sentence: '1/2 teaspoon salt'
-                    },
-                    {
-                        userId,
-                        sentence: '1 tablespoon baking soda'
-                    },
-                    {
-                        userId,
-                        sentence: '1/4 cup melted butter'
-                    },
-                    {
-                        userId,
-                        sentence: '2 tablespoons sugar'
-                    },
-                    {
-                        userId,
-                        sentence: '2 large eggs'
-                    },
+                    { sentence: '2 cups all-purpose flour' },
+                    { sentence: '1 1/2 cups milk' },
+                    { sentence: '2 teaspoons baking powder' },
+                    { sentence: '1/2 teaspoon salt' },
+                    { sentence: '1 tablespoon baking soda' },
+                    { sentence: '1/4 cup melted butter' },
+                    { sentence: '2 tablespoons sugar' },
+                    { sentence: '2 large eggs' },
                 ]
             },
             instructions: [
@@ -126,33 +110,18 @@ async function main() {
             }
         },
         {
-            userId,
+            householdId: household.id,
             name: 'Avocado Toast',
             cookTime: '5 mins',
             prepTime: '10 mins',
             servings: 2,
             ingredients: {
                 create: [
-                    {
-                        userId,
-                        sentence: '2 slices whole grain bread'
-                    },
-                    {
-                        userId,
-                        sentence: '1 ripe avocado'
-                    },
-                    {
-                        userId,
-                        sentence: '1 tablespoon olive oil'
-                    },
-                    {
-                        userId,
-                        sentence: '1 teaspoon lemon juice'
-                    },
-                    {
-                        userId,
-                        sentence: 'Salt and pepper to taste'
-                    },
+                    { sentence: '2 slices whole grain bread' },
+                    { sentence: '1 ripe avocado' },
+                    { sentence: '1 tablespoon olive oil' },
+                    { sentence: '1 teaspoon lemon juice' },
+                    { sentence: 'Salt and pepper to taste' },
                 ]
             },
             instructions: [
@@ -209,7 +178,7 @@ async function main() {
     // Seed recipes
     for (const u of recipeData) {
         const existingRecipe = await prisma.recipe.findFirst({
-            where: { name: u.name, userId },
+            where: { name: u.name, householdId: household.id },
         });
 
         if (existingRecipe) {
@@ -230,7 +199,7 @@ async function main() {
     // Seed recipes from URLs
     for (const url of recipeUrls) {
         try {
-            await createRecipeFromUrl(userId!, url);
+            await createRecipeFromUrl(household.id, url);
             console.log(`Created recipe from URL: ${url}`);
         } catch (error) {
             console.error(`Failed to create recipe from URL ${url}:`, error);

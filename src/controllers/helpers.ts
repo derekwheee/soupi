@@ -1,6 +1,9 @@
+import { Household, Prisma } from '@prisma/client';
+import prisma from '../../prisma';
 import { Request, Response } from 'express';
 import { getAuth } from '@clerk/express'
 import he from 'he';
+import { has } from 'cheerio/dist/commonjs/api/traversing';
 
 
 function decodeEntitiesDeep(value: any): any {
@@ -16,6 +19,15 @@ function decodeEntitiesDeep(value: any): any {
     return value;
 }
 
+async function hasAccessToHousehold(userId: string, householdId: number): Promise<Household | null> {
+    return await prisma.household.findFirst({
+        where: {
+            id: householdId,
+            members: { some: { id: userId } }
+        }
+    });
+}
+
 export async function controller(
     req: Request,
     res: Response,
@@ -25,7 +37,7 @@ export async function controller(
         const { userId } = getAuth(req);
 
         const json = await fn(userId);
-        
+
         if (typeof json !== 'object') {
             throw new Error('Controller function must return an object');
         }
@@ -39,4 +51,34 @@ export async function controller(
                 { error: 'An unknown error occurred' }
         );
     }
+}
+
+export async function householdController(
+    req: Request,
+    res: Response,
+    fn: Function
+): Promise<void> {
+
+    const householdId = Number(req.params.householdId);
+
+    if (isNaN(householdId)) {
+        res.status(400).json({ error: 'Invalid householdId parameter' });
+        return;
+    }
+
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+    }
+
+    const household = await hasAccessToHousehold(userId, householdId);
+
+    if (!household) {
+        res.status(403).json({ error: 'Access denied' });
+        return;
+    }
+
+    return await controller(req, res, () => fn(household));
 }

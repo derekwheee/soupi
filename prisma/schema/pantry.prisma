@@ -1,11 +1,12 @@
 model Pantry {
-  id             Int            @id @default(autoincrement())
-  name           String
-  isDefault      Boolean        @default(false)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  deletedAt      DateTime?
-  members        User[]
-  pantryItems    PantryItem[]
-  itemCategories ItemCategory[]
+    id             Int            @id @default(autoincrement())
+    name           String
+    isDefault      Boolean        @default(false)
+    createdAt      DateTime       @default(now())
+    updatedAt      DateTime       @updatedAt
+    deletedAt      DateTime?
+    householdId    Int
+    household      Household      @relation(fields: [householdId], references: [id])
+    pantryItems    PantryItem[]
+    itemCategories ItemCategory[]
 }

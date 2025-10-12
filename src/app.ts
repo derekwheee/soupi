@@ -14,7 +14,7 @@ app.use(clerkMiddleware());
 
 app.use('/meta', metaRoutes);
 app.use('/user', userRoutes);
-app.use('/recipes', recipeRoutes);
-app.use('/pantry', pantryRoutes);
+app.use('/', recipeRoutes);
+app.use('/', pantryRoutes);
 
 export default app;

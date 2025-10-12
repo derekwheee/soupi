@@ -1,13 +1,19 @@
 import { Request, Response } from 'express';
 import * as recipeService from '../services/recipe';
-import { controller } from './helpers';
+import { householdController } from './helpers';
+import { Household } from '@prisma/client';
 
 export async function createRecipe(req: Request, res: Response) {
-    return await controller(req, res, (userId: string) => recipeService.createRecipe(userId, req.body));
+    return await householdController(
+        req,
+        res,
+        (household: Household) =>
+            recipeService.createRecipe(household.id, req.body)
+    );
 }
 
 export async function createRecipeFromUrl(req: Request, res: Response) {
-    return await controller(req, res, async (userId: string) => {
+    return await householdController(req, res, async (household: Household) => {
         const queryUrl = (req.query && (req.query.url as string)) as string | undefined;
 
         if (!queryUrl || typeof queryUrl !== 'string') {
@@ -22,14 +28,14 @@ export async function createRecipeFromUrl(req: Request, res: Response) {
             url = queryUrl;
         }
 
-        return await recipeService.createRecipeFromUrl(userId, url);
+        return await recipeService.createRecipeFromUrl(household.id, url);
     });
-}
+};
 
 export async function getAllRecipes(req: Request, res: Response) {
-    return await controller(req, res, (userId: string) => recipeService.getAllRecipes(userId));
+    return await householdController(req, res, (household: Household) => recipeService.getAllRecipes(household.id));
 }
 
 export async function getRecipe(req: Request, res: Response) {
-    return await controller(req, res, (userId: string) => recipeService.getRecipe(userId, Number(req.params.id)));
+    return await householdController(req, res, (household: Household) => recipeService.getRecipe(household.id, Number(req.params.id)));
 }

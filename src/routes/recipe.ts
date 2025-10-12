@@ -9,13 +9,13 @@ import { scrapeRecipe, RecipeJSON } from '../services/scraper';
 import { requireAuth } from '@clerk/express'
 
 const router = Router();
+const prefix = '/household/:householdId/recipes';
 
+router.get(prefix, getAllRecipes);
+router.post(prefix, requireAuth(), createRecipe);
+router.post(`${prefix}/from-url`, requireAuth(), createRecipeFromUrl);
 
-router.get('/', requireAuth(), getAllRecipes);
-router.post('/', requireAuth(), createRecipe);
-router.post('/from-url', requireAuth(), createRecipeFromUrl);
-
-router.get("/scrape", requireAuth(), async (req: Request, res: Response) => {
+router.get(`${prefix}/scrape`, requireAuth(), async (req: Request, res: Response) => {
     try {
         const { url } = req.query;
         if (!url || typeof url !== "string") {
@@ -30,6 +30,6 @@ router.get("/scrape", requireAuth(), async (req: Request, res: Response) => {
     }
 });
 
-router.get('/:id', requireAuth(), getRecipe);
+router.get(`${prefix}/:id`, requireAuth(), getRecipe);
 
 export default router;

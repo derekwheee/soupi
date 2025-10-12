@@ -1,9 +1,9 @@
 import { Pantry, PantryItem } from '@prisma/client';
 import prisma from '../../prisma';
 
-export async function getPantries(userId: string): Promise<Pantry[]> {
+export async function getPantries(householdId: number): Promise<Pantry[]> {
     return prisma.pantry.findMany({
-        where: { members: { some: { id: userId } } },
+        where: { householdId },
         include: {
             pantryItems: { include: { category: true } },
             itemCategories: true
@@ -11,16 +11,16 @@ export async function getPantries(userId: string): Promise<Pantry[]> {
     });
 }
 
-export async function getAllPantryItems(pantryId: number): Promise<PantryItem[]> {
+export async function getAllPantryItems(householdId: number, pantryId: number): Promise<PantryItem[]> {
     return prisma.pantryItem.findMany({
-        where: { pantryId },
+        where: { pantryId, pantry: { householdId } },
         include: { category: true }
     });
 };
 
-export async function getPantryItem(pantryId: number, itemId: number): Promise<PantryItem> {
+export async function getPantryItem(householdId: number, pantryId: number, itemId: number): Promise<PantryItem> {
     return prisma.pantryItem.findUniqueOrThrow({
-        where: { id: itemId, pantryId },
+        where: { id: itemId, pantryId, pantry: { householdId } },
         include: { category: true }
     });
 };
@@ -51,30 +51,6 @@ export async function getPantryCategories(pantryId: number) {
                 include: {
                     category: true
                 }
-            }
-        }
-    });
-}
-
-export async function createSharedPantry(userIdA: string, userIdB: string): Promise<Pantry> {
-
-    // Set isDefault to false on existing default pantries for both users
-    await prisma.pantry.updateMany({
-        where: { isDefault: true, members: { some: { id: userIdA } } },
-        data: { isDefault: false }
-    });
-
-    await prisma.pantry.updateMany({
-        where: { isDefault: true, members: { some: { id: userIdB } } },
-        data: { isDefault: false }
-    });
-
-    return await prisma.pantry.create({
-        data: {
-            name: `Shared Pantry`,
-            isDefault: true,
-            members: {
-                connect: [{ id: userIdA }, { id: userIdB }]
             }
         }
     });

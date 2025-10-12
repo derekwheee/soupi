@@ -1,7 +1,4 @@
-FROM node:lts-bookworm
-
-ENV DATABASE_URL=prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza192aTRiX1dnWmdjcXJXSEs1OXVhbHoiLCJhcGlfa2V5IjoiMDFLNkJXSlZFUTkzVkpRMjY4QzA5OTc0VzMiLCJ0ZW5hbnRfaWQiOiJhYWRmOWQ4ZGE2NTkxNDJhMzIwYTE4MWNkMjQ3ZGMxZDJlYmU4OTIzNjYxNzY3MmQ4MDYyZDk2NWY0NGU1OTJiIiwiaW50ZXJuYWxfc2VjcmV0IjoiNjYyMDhjY2ItMTkyMy00MGRhLTk3NmUtMDc0MjAwMDhkMzQ5In0.qu-cZ4_8_gX7i4ag-ZoTmiPvibYYR5cyF_kt7hNanws
-ENV PORT=8080
+FROM node:lts-bookworm-slim
 
 # Install Python and venv support
 RUN apt-get update && \
@@ -30,7 +27,7 @@ RUN pip install --upgrade pip setuptools wheel
 RUN if [ -f python/requirements.txt ]; then pip install -r python/requirements.txt; fi
 
 # Make parser executable
-RUN chmod +x python/parser.py
+RUN chmod +x python/parser.py python/scraper.py
 
 # Railway uses PORT env variable
 ENV PORT=8080

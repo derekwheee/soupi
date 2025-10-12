@@ -1,13 +1,13 @@
 model ItemCategory {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
-  sortOrder   Int          @default(0)
-  icon        String?
-  isNonFood   Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  deletedAt   DateTime?
-  pantryItems PantryItem[]
-  pantryId    Int
-  pantry      Pantry       @relation(fields: [pantryId], references: [id])
+    id          Int          @id @default(autoincrement())
+    name        String       @unique
+    sortOrder   Int          @default(0)
+    icon        String?
+    isNonFood   Boolean      @default(false)
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+    deletedAt   DateTime?
+    pantryItems PantryItem[]
+    pantryId    Int
+    pantry      Pantry       @relation(fields: [pantryId], references: [id])
 }

@@ -5,7 +5,8 @@
   "scripts": {
     "start": "ts-node src/server.ts",
     "dev": "nodemon src/server.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "docker:rebuild": "docker rm -f soupi || true && docker build -t soupi . && docker run -d -p 8080:8080 --env-file .env-docker --name soupi soupi"
   },
   "imports": {
     "#*": "./src/*"

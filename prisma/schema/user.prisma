@@ -1,14 +1,12 @@
 model User {
-  id        String    @id
-  clerkId   String    @unique
-  email     String    @unique
-  name      String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+    id        String    @id
+    clerkId   String    @unique
+    email     String    @unique
+    name      String?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
 
-  // Relations
-  recipes     Recipe[]
-  ingredients Ingredient[]
-  pantries    Pantry[]
+    // Relations
+    households Household[]
 }

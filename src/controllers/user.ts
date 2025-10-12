@@ -3,6 +3,16 @@ import * as userService from '../services/user';
 import { controller } from './helpers';
 import { clerkClient, getAuth } from '@clerk/express'
 
+export async function getUser(req: Request, res: Response) {
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    return await controller(req, res, () => userService.getById(userId));
+}
+
 export async function syncUser(req: Request, res: Response) {
     const { userId } = getAuth(req);
 
