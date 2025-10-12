@@ -4,6 +4,7 @@ import userRoutes from './routes/user';
 import recipeRoutes from './routes/recipe';
 import pantryRoutes from './routes/pantry';
 import metaRoutes from './routes/meta';
+import householdRoutes from './routes/household';
 import { clerkMiddleware } from '@clerk/express'
 
 const app = express();
@@ -16,5 +17,6 @@ app.use('/meta', metaRoutes);
 app.use('/user', userRoutes);
 app.use('/', recipeRoutes);
 app.use('/', pantryRoutes);
+app.use('/', householdRoutes);
 
 export default app;

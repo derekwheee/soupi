@@ -19,11 +19,15 @@ function decodeEntitiesDeep(value: any): any {
     return value;
 }
 
-async function hasAccessToHousehold(userId: string, householdId: number): Promise<Household | null> {
+async function hasAccessToHousehold(
+    userId: string,
+    householdId: number,
+    skipAccessCheck = false
+): Promise<Household | null> {
     return await prisma.household.findFirst({
         where: {
             id: householdId,
-            members: { some: { id: userId } }
+            ...(skipAccessCheck ? {} : { members: { some: { id: userId } } })
         }
     });
 }
@@ -56,7 +60,12 @@ export async function controller(
 export async function householdController(
     req: Request,
     res: Response,
-    fn: Function
+    fn: Function,
+    {
+        skipAccessCheck = false
+    } : {
+        skipAccessCheck?: boolean
+    } = {}
 ): Promise<void> {
 
     const householdId = Number(req.params.householdId);
@@ -73,7 +82,7 @@ export async function householdController(
         return;
     }
 
-    const household = await hasAccessToHousehold(userId, householdId);
+    const household = await hasAccessToHousehold(userId, householdId, skipAccessCheck);
 
     if (!household) {
         res.status(403).json({ error: 'Access denied' });

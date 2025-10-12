@@ -1,7 +1,6 @@
 model Household {
     id        Int       @id @default(autoincrement())
     name      String
-    isDefault Boolean   @default(false)
     joinToken String    @unique @default(uuid())
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt

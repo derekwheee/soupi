@@ -33,10 +33,14 @@ async function main() {
     const household = await prisma.household.create({
         data: {
             name: "My Household",
-            isDefault: true,
             members: { connect: { id: user.id! } },
         }
     })
+
+    await prisma.user.update({
+        where: { id: user.id! },
+        data: { defaultHouseholdId: household.id }
+    });
 
     // Create default pantry
     const pantry = await prisma.pantry.create({
