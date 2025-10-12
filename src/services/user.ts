@@ -7,7 +7,7 @@ export async function getById(id: string): Promise<User | null> {
     return prisma.user.findUnique({
         where: { id },
         include: {
-            households: { where: { isDefault: true } }
+            households: true
         }
     });
 }
@@ -22,7 +22,6 @@ export async function createUser(user: ClerkUser): Promise<User> {
             households: {
                 create: {
                     name: 'My Household',
-                    isDefault: true,
                     pantries: {
                         create: {
                             name: 'My Pantry',
