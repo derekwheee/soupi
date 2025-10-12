@@ -4,7 +4,8 @@
   "license": "MIT",
   "scripts": {
     "start": "ts-node src/server.ts",
-    "dev": "nodemon src/server.ts"
+    "dev": "nodemon src/server.ts",
+    "postinstall": "prisma generate"
   },
   "imports": {
     "#*": "./src/*"
