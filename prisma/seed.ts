@@ -2,6 +2,7 @@ import { PrismaClient, Prisma } from '@prisma/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { parseIngredients } from '../src/services/ingredient';
 import { createRecipeFromUrl } from '../src/services/recipe';
+import { DEFAULT_CATEGORIES } from '../utils/constants';
 
 const prisma = new PrismaClient().$extends(withAccelerate());
 
@@ -46,19 +47,10 @@ async function main() {
         }
     });
 
-    const categories: Prisma.ItemCategoryUncheckedCreateInput[] = [
-        { pantryId: pantry.id, name: 'Produce', sortOrder: 0, icon: '🍎' },
-        { pantryId: pantry.id, name: 'Bakery', sortOrder: 1, icon: '🍞' },
-        { pantryId: pantry.id, name: 'Deli', sortOrder: 2, icon: '🧀' },
-        { pantryId: pantry.id, name: 'Meat & Seafood', sortOrder: 3, icon: '🍖' },
-        { pantryId: pantry.id, name: 'Grocery', sortOrder: 4, icon: '🥫' },
-        { pantryId: pantry.id, name: 'Beverages', sortOrder: 5, icon: '🧃' },
-        { pantryId: pantry.id, name: 'Dairy', sortOrder: 6, icon: '🥛' },
-        { pantryId: pantry.id, name: 'Frozen', sortOrder: 7, icon: '🍦' },
-        { pantryId: pantry.id, name: 'Household', sortOrder: 8, icon: '🧴', isNonFood: true },
-        { pantryId: pantry.id, name: 'Personal Care', sortOrder: 9, icon: '🪥', isNonFood: true },
-        { pantryId: pantry.id, name: 'Other', sortOrder: 10, icon: '🛒' }
-    ];
+    const categories: Prisma.ItemCategoryUncheckedCreateInput[] = DEFAULT_CATEGORIES.map(category => ({
+        pantryId: pantry.id,
+        ...category
+    }));
 
     const recipeUrls: string[] = [
         'https://www.allrecipes.com/recipe/16248/easy-homemade-chili/',
