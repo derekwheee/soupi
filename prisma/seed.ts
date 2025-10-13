@@ -139,20 +139,24 @@ async function main() {
     ];
 
     const pantryItemData: Prisma.PantryItemCreateInput[] = [
-        { name: 'all-purpose flour', category: { connect: { name: 'Grocery' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'sugar', category: { connect: { name: 'Grocery' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'eggs', category: { connect: { name: 'Dairy' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'milk', category: { connect: { name: 'Dairy' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'whole grain bread', category: { connect: { name: 'Bakery' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'avocado', category: { connect: { name: 'Produce' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'olive oil', category: { connect: { name: 'Grocery' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'lemon juice', category: { connect: { name: 'Grocery' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'salt', category: { connect: { name: 'Grocery' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'pepper', category: { connect: { name: 'Grocery' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'baking powder', isInStock: false, isInShoppingList: true, category: { connect: { name: 'Grocery' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'baking soda', isInStock: false, isInShoppingList: true, category: { connect: { name: 'Grocery' } }, pantry: { connect: { id: pantry.id } } },
-        { name: 'butter', isInStock: false, isInShoppingList: true, category: { connect: { name: 'Dairy' } }, pantry: { connect: { id: pantry.id } } }
-    ];
+        { name: 'all-purpose flour', category: 'Baking' },
+        { name: 'sugar', category: 'Baking' },
+        { name: 'eggs', category: 'Dairy' },
+        { name: 'milk', category: 'Dairy' },
+        { name: 'whole grain bread', category: 'Bakery' },
+        { name: 'avocado', category: 'Produce' },
+        { name: 'olive oil', category: 'Condiments & Spices' },
+        { name: 'lemon juice', category: 'Condiments & Spices' },
+        { name: 'salt', category: 'Condiments & Spices' },
+        { name: 'pepper', category: 'Condiments & Spices' },
+        { name: 'baking powder', isInStock: false, isInShoppingList: true, category: 'Baking' },
+        { name: 'baking soda', isInStock: false, isInShoppingList: true, category: 'Baking' },
+        { name: 'butter', isInStock: false, isInShoppingList: true, category: 'Dairy' }
+    ].map(item => ({
+        ...item,
+        pantry: { connect: { id: pantry.id } },
+        category: { connect: { name: item.category } }
+    }));
 
     // Seed categories
     for (const c of categories) {

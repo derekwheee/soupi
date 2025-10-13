@@ -12,7 +12,7 @@ const router = Router();
 const prefix = '/household/:householdId/pantry';
 
 router.get(prefix, getPantries);
-router.post(prefix, upsertPantryItem);
+router.post(`${prefix}/:pantryId`, upsertPantryItem);
 router.get(`${prefix}/:pantryId/items`, requireAuth(), getAllPantryItems);
 router.get(`${prefix}/:pantryId/items/:itemId`, requireAuth(), getPantryItem);
 router.get(`${prefix}/:pantryId/categories`, requireAuth(), getPantryCategories);
