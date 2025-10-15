@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, Recipe } from '@prisma/client';
 import prisma from '../../prisma';
 import { parseIngredients } from './ingredient';
 import { scrapeRecipe } from './scraper';
@@ -10,9 +10,20 @@ type RecipeWithJoins = Prisma.RecipeGetPayload<{
     };
 }>;
 
+type RecipePatch = {
+    id: number;
+    ingredients?: string[];
+    name?: string;
+    prepTime?: string | null;
+    cookTime?: string | null;
+    servings?: number | null;
+    instructions?: string | null;
+    tags?: { id: number, name: string }[];
+};
+
 export async function getAllRecipes(householdId: number): Promise<RecipeWithJoins[]> {
     return prisma.recipe.findMany({
-        where: { householdId },
+        where: { householdId, deletedAt: null },
         include: {
             ingredients: true,
             tags: true
@@ -32,7 +43,7 @@ export async function getRecipe(householdId: number, id: number): Promise<Recipe
 
 export async function createRecipe(householdId: number, data: any): Promise<RecipeWithJoins> {
 
-    const { id, ingredients, ...recipe } = data;
+    const { ingredients, ...recipe } = data;
 
     const newRecipe = await prisma.recipe.create({
         data: {
@@ -45,28 +56,7 @@ export async function createRecipe(householdId: number, data: any): Promise<Reci
         }
     });
 
-    if (!ingredients || ingredients.length === 0) {
-        return {
-            ...newRecipe,
-            ingredients: [],
-            tags: []
-        };
-    }
-
-    const newIngredients = await prisma.ingredient.createManyAndReturn({
-        data: [
-            ...ingredients.map((sentence: string) => ({
-                recipeId: newRecipe.id,
-                sentence
-            }))
-        ]
-    });
-
-    return parseIngredients({
-        ...newRecipe,
-        ingredients: newIngredients,
-        tags: []
-    });
+    return processIngredients(newRecipe, ingredients);
 }
 
 export async function createRecipeFromUrl(householdId: number, url: string): Promise<RecipeWithJoins> {
@@ -84,6 +74,55 @@ export async function createRecipeFromUrl(householdId: number, url: string): Pro
 
     return createRecipe(householdId, recipe);
 }
+
+export async function updateRecipe(householdId: number, patch: RecipePatch): Promise<RecipeWithJoins> {
+    const { id, ingredients, tags = [], ...data } = patch;
+
+    const updatedRecipe = await prisma.recipe.update({
+        where: { id, householdId },
+        data: {
+            ...data as Prisma.RecipeUpdateInput,
+            tags: {
+                set: [],
+                connectOrCreate: tags.map(tag => ({
+                    where: { name: tag.name },
+                    create: { name: tag.name }
+                }))
+            }
+        }
+    });
+
+    return processIngredients(updatedRecipe, ingredients);
+}
+
+export async function deleteRecipe(householdId: number, id: number): Promise<void> {
+    await prisma.recipe.update({
+        where: { id, householdId },
+        data: { deletedAt: new Date() }
+    });
+}
+
+const processIngredients = async (recipe: Recipe, ingredients?: string[]) => {
+    let newIngredients;
+
+    if (ingredients && ingredients.length > 0) {
+        await prisma.ingredient.deleteMany({
+            where: { recipeId: recipe.id }
+        });
+
+        newIngredients = await prisma.ingredient.createManyAndReturn({
+            data: ingredients.map((sentence: string) => ({
+                recipeId: recipe.id,
+                sentence
+            }))
+        });
+    }
+
+    return parseIngredients({
+        ...recipe,
+        ingredients: newIngredients || ingredients || []
+    });
+};
 
 const parseTimes = (time?: string | null | undefined) => {
 

@@ -7,7 +7,7 @@ type RecipeWithJoins = Prisma.RecipeGetPayload<{
 }>;
 
 export async function parseIngredients(recipeId: number): Promise<RecipeWithJoins>;
-export async function parseIngredients(recipe: RecipeWithJoins): Promise<RecipeWithJoins>;
+export async function parseIngredients(recipe: any): Promise<RecipeWithJoins>;
 export async function parseIngredients(arg: number | RecipeWithJoins): Promise<RecipeWithJoins> {
     const recipe: RecipeWithJoins =
         typeof arg === 'number'

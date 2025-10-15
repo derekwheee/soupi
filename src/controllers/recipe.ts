@@ -39,3 +39,11 @@ export async function getAllRecipes(req: Request, res: Response) {
 export async function getRecipe(req: Request, res: Response) {
     return await householdController(req, res, (household: Household) => recipeService.getRecipe(household.id, Number(req.params.id)));
 }
+
+export async function updateRecipe(req: Request, res: Response) {
+    return await householdController(req, res, (household: Household) => recipeService.updateRecipe(household.id, req.body));
+}
+
+export async function deleteRecipe(req: Request, res: Response) {
+    return await householdController(req, res, (household: Household) => recipeService.deleteRecipe(household.id, Number(req.params.id)));
+}

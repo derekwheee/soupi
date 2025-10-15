@@ -36,14 +36,14 @@ export async function controller(
     req: Request,
     res: Response,
     fn: Function
-): Promise<void> {
+): Promise<any> {
     try {
         const { userId } = getAuth(req);
 
         const json = await fn(userId);
 
         if (typeof json !== 'object') {
-            throw new Error('Controller function must return an object');
+            return res.status(200).send(json)
         }
 
         res.json(decodeEntitiesDeep(json));

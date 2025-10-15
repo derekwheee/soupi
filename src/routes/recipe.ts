@@ -4,6 +4,8 @@ import {
     createRecipeFromUrl,
     getAllRecipes,
     getRecipe,
+    updateRecipe,
+    deleteRecipe
 } from '../controllers/recipe';
 import { scrapeRecipe, RecipeJSON } from '../services/scraper';
 import { requireAuth } from '@clerk/express'
@@ -11,7 +13,7 @@ import { requireAuth } from '@clerk/express'
 const router = Router();
 const prefix = '/household/:householdId/recipes';
 
-router.get(prefix, getAllRecipes);
+router.get(prefix, requireAuth(), getAllRecipes);
 router.post(prefix, requireAuth(), createRecipe);
 router.post(`${prefix}/from-url`, requireAuth(), createRecipeFromUrl);
 
@@ -31,5 +33,7 @@ router.get(`${prefix}/scrape`, requireAuth(), async (req: Request, res: Response
 });
 
 router.get(`${prefix}/:id`, requireAuth(), getRecipe);
+router.post(`${prefix}/:id`, requireAuth(), updateRecipe);
+router.delete(`${prefix}/:id`, requireAuth(), deleteRecipe);
 
 export default router;
