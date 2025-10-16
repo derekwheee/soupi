@@ -9,7 +9,7 @@ export async function getPantries(req: Request, res: Response) {
 
 export async function upsertPantryItem(req: Request, res: Response) {
     const { pantryId } = req.params;
-    return await householdController(req, res, () => pantryService.upsertPantryItem({ pantryId, ...req.body }));
+    return await householdController(req, res, (household: Household) => pantryService.upsertPantryItem(household.id, { pantryId, ...req.body }));
 }
 
 export async function getAllPantryItems(req: Request, res: Response) {

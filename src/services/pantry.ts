@@ -25,7 +25,17 @@ export async function getPantryItem(householdId: number, pantryId: number, itemI
     });
 };
 
-export async function upsertPantryItem(item: PantryItem): Promise<PantryItem> {
+export async function upsertPantryItem(householdId: number, item: PantryItem): Promise<PantryItem> {
+
+    // Validate household access to pantryId
+    const pantry = await prisma.pantry.findUniqueOrThrow({
+        where: { id: item.pantryId, householdId }
+    });
+
+    if (!pantry) {
+        throw new Error('Pantry not found or access denied');
+    }
+
     const { id, ...data } = item;
 
     if (id) {

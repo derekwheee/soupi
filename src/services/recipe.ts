@@ -10,95 +10,115 @@ type RecipeWithJoins = Prisma.RecipeGetPayload<{
     };
 }>;
 
-type RecipePatch = {
-    id: number;
+type RecipeUpsert = {
+    id?: number;
     ingredients?: string[];
     name?: string;
     prepTime?: string | null;
     cookTime?: string | null;
     servings?: number | null;
-    instructions?: string | null;
-    tags?: { id: number, name: string }[];
+    instructions?: string[] | null;
+    tags?: { id: number; name: string }[];
 };
 
-export async function getAllRecipes(householdId: number): Promise<RecipeWithJoins[]> {
+export async function getAllRecipes(
+    householdId: number,
+): Promise<RecipeWithJoins[]> {
     return prisma.recipe.findMany({
         where: { householdId, deletedAt: null },
         include: {
             ingredients: true,
-            tags: true
-        }
+            tags: true,
+        },
     });
 }
 
-export async function getRecipe(householdId: number, id: number): Promise<RecipeWithJoins> {
+export async function getRecipe(
+    householdId: number,
+    id: number,
+): Promise<RecipeWithJoins> {
     return prisma.recipe.findUniqueOrThrow({
         where: { id, householdId },
         include: {
             ingredients: true,
-            tags: true
-        }
+            tags: true,
+        },
     });
 }
 
-export async function createRecipe(householdId: number, data: any): Promise<RecipeWithJoins> {
-
-    const { ingredients, ...recipe } = data;
-
-    const newRecipe = await prisma.recipe.create({
-        data: {
-            householdId,
-            name: recipe.name,
-            prepTime: recipe.prepTime,
-            cookTime: recipe.cookTime,
-            servings: recipe.servings,
-            instructions: recipe.instructions
-        }
-    });
-
-    return processIngredients(newRecipe, ingredients);
-}
-
-export async function createRecipeFromUrl(householdId: number, url: string): Promise<RecipeWithJoins> {
+export async function createRecipeFromUrl(
+    householdId: number,
+    url: string,
+): Promise<RecipeWithJoins> {
     const recipeData = await scrapeRecipe(url);
 
-    const recipe = {
-        householdId,
+    const recipe: RecipeUpsert = {
         name: recipeData.name || 'Untitled Recipe',
         prepTime: parseTimes(recipeData.prepTime),
         cookTime: parseTimes(recipeData.cookTime),
-        servings: recipeData.recipeYield ? Number(recipeData.recipeYield) : null,
+        servings: recipeData.recipeYield
+            ? Number(recipeData.recipeYield)
+            : null,
         instructions: recipeData.instructions,
-        ingredients: recipeData.ingredients
+        ingredients: recipeData.ingredients,
     };
 
-    return createRecipe(householdId, recipe);
+    return upsertRecipe(householdId, recipe);
 }
 
-export async function updateRecipe(householdId: number, patch: RecipePatch): Promise<RecipeWithJoins> {
+export async function upsertRecipe(
+    householdId: number,
+    patch: RecipeUpsert,
+): Promise<RecipeWithJoins> {
     const { id, ingredients, tags = [], ...data } = patch;
+    let updatedRecipe;
 
-    const updatedRecipe = await prisma.recipe.update({
-        where: { id, householdId },
-        data: {
-            ...data as Prisma.RecipeUpdateInput,
-            tags: {
-                set: [],
-                connectOrCreate: tags.map(tag => ({
-                    where: { name: tag.name },
-                    create: { name: tag.name }
-                }))
-            }
-        }
-    });
+    if (!id) {
+        updatedRecipe = await prisma.recipe.create({
+            data: {
+                ...(data as Prisma.RecipeUncheckedCreateInput),
+                householdId,
+                tags: {
+                    connectOrCreate: tags.map((tag) => ({
+                        where: { name: tag.name, householdId },
+                        create: { name: tag.name, householdId },
+                    })),
+                },
+            },
+        });
+    } else {
+        updatedRecipe = await prisma.recipe.update({
+            where: { id, householdId },
+            data: {
+                ...(data as Prisma.RecipeUpdateInput),
+                tags: {
+                    set: [],
+                    connectOrCreate: tags.map((tag) => ({
+                        where: { name: tag.name, householdId },
+                        create: { name: tag.name, householdId },
+                    })),
+                },
+            },
+        });
+    }
 
     return processIngredients(updatedRecipe, ingredients);
 }
 
-export async function deleteRecipe(householdId: number, id: number): Promise<void> {
+export async function deleteRecipe(
+    householdId: number,
+    id: number,
+): Promise<void> {
     await prisma.recipe.update({
         where: { id, householdId },
-        data: { deletedAt: new Date() }
+        data: { deletedAt: new Date() },
+    });
+}
+
+export async function getAllRecipeTags(householdId: number) {
+    return prisma.recipeTag.findMany({
+        where: { recipes: { every: { householdId } } },
+        orderBy: { name: 'asc' },
     });
 }
 
@@ -107,25 +127,24 @@ const processIngredients = async (recipe: Recipe, ingredients?: string[]) => {
 
     if (ingredients && ingredients.length > 0) {
         await prisma.ingredient.deleteMany({
-            where: { recipeId: recipe.id }
+            where: { recipeId: recipe.id },
         });
 
         newIngredients = await prisma.ingredient.createManyAndReturn({
             data: ingredients.map((sentence: string) => ({
                 recipeId: recipe.id,
-                sentence
-            }))
+                sentence,
+            })),
         });
     }
 
     return parseIngredients({
         ...recipe,
-        ingredients: newIngredients || ingredients || []
+        ingredients: newIngredients || ingredients || [],
     });
 };
 
 const parseTimes = (time?: string | null | undefined) => {
-
     if (!time) return time;
 
     if (time.match(/PT\d+\w+/)) {
