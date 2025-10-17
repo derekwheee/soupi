@@ -5,8 +5,11 @@ export async function getPantries(householdId: number): Promise<Pantry[]> {
     return prisma.pantry.findMany({
         where: { householdId },
         include: {
-            pantryItems: { include: { category: true } },
-            itemCategories: true,
+            pantryItems: {
+                orderBy: { id: 'asc' },
+                include: { category: true },
+            },
+            itemCategories: { orderBy: { sortOrder: 'asc' } },
         },
     });
 }
@@ -49,7 +52,7 @@ export async function upsertPantryItem(
 
     const existing = await prisma.pantryItem.findFirst({
         where: {
-            OR: [(id ? { id } : {}), { name: item.name }],
+            OR: [id ? { id } : {}, { name: item.name }],
         },
     });
 
@@ -70,6 +73,7 @@ export async function getPantryCategories(pantryId: number) {
         orderBy: { sortOrder: 'asc' },
         include: {
             pantryItems: {
+                orderBy: { id: 'asc' },
                 include: {
                     category: true,
                 },

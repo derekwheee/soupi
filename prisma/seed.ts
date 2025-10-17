@@ -2,7 +2,7 @@ import { PrismaClient, Prisma } from '@prisma/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { parseIngredients } from '../src/services/ingredient';
 import { createRecipeFromUrl } from '../src/services/recipe';
-import { DEFAULT_CATEGORIES } from '../utils/constants';
+import { DEFAULT_CATEGORIES, DEFAuLT_TAGS } from '../utils/constants';
 
 const prisma = new PrismaClient().$extends(withAccelerate());
 
@@ -50,6 +50,11 @@ async function main() {
             household: { connect: { id: household.id } }
         }
     });
+
+    const tags: Prisma.RecipeTagUncheckedCreateInput[] = DEFAuLT_TAGS.map(({ name }) => ({
+        householdId: household.id,
+        name
+    }));
 
     const categories: Prisma.ItemCategoryUncheckedCreateInput[] = DEFAULT_CATEGORIES.map(category => ({
         pantryId: pantry.id,
@@ -99,9 +104,9 @@ async function main() {
             ],
             tags: {
                 connectOrCreate: [
-                    { where: { name: 'breakfast' }, create: { name: 'breakfast' } },
-                    { where: { name: 'easy' }, create: { name: 'easy' } },
-                    { where: { name: 'vegetarian' }, create: { name: 'vegetarian' } }
+                    { where: { name: 'breakfast' }, create: { name: 'breakfast', householdId: household.id } },
+                    { where: { name: 'easy' }, create: { name: 'easy', householdId: household.id } },
+                    { where: { name: 'vegetarian' }, create: { name: 'vegetarian', householdId: household.id } }
                 ]
             }
         },
@@ -129,23 +134,23 @@ async function main() {
             ],
             tags: {
                 connectOrCreate: [
-                    { where: { name: 'breakfast' }, create: { name: 'breakfast' } },
-                    { where: { name: '<30mins' }, create: { name: '<30mins' } },
-                    { where: { name: 'healthy' }, create: { name: 'healthy' } },
-                    { where: { name: 'vegetarian' }, create: { name: 'vegetarian' } }
+                    { where: { name: 'breakfast' }, create: { name: 'breakfast', householdId: household.id } },
+                    { where: { name: '<30mins' }, create: { name: '<30mins', householdId: household.id } },
+                    { where: { name: 'healthy' }, create: { name: 'healthy', householdId: household.id } },
+                    { where: { name: 'vegetarian' }, create: { name: 'vegetarian', householdId: household.id } }
                 ]
             }
         }
     ];
 
     const pantryItemData: Prisma.PantryItemCreateInput[] = [
-        { name: 'all-purpose flour', category: 'Baking' },
-        { name: 'sugar', category: 'Baking' },
-        { name: 'eggs', category: 'Dairy' },
-        { name: 'milk', category: 'Dairy' },
-        { name: 'whole grain bread', category: 'Bakery' },
-        { name: 'avocado', category: 'Produce' },
-        { name: 'olive oil', category: 'Condiments & Spices' },
+        { name: 'all-purpose flour', isInStock: true, category: 'Baking' },
+        { name: 'sugar', isInStock: true, category: 'Baking' },
+        { name: 'eggs', isInStock: true, category: 'Dairy' },
+        { name: 'milk', isInStock: true, category: 'Dairy' },
+        { name: 'whole grain bread', isInStock: true, category: 'Bakery' },
+        { name: 'avocado', isInStock: true, category: 'Produce' },
+        { name: 'olive oil', isInStock: true, category: 'Condiments & Spices' },
         { name: 'lemon juice', category: 'Condiments & Spices' },
         { name: 'salt', category: 'Condiments & Spices' },
         { name: 'pepper', category: 'Condiments & Spices' },
@@ -173,6 +178,23 @@ async function main() {
             data: c,
         });
         console.log(`Created category with id: ${category.id}`)
+    }
+
+    // Seed tags
+    for (const t of tags) {
+        const existingTag = await prisma.recipeTag.findFirst({
+            where: { name: t.name, householdId: household.id },
+        });
+
+        if (existingTag) {
+            console.log(`Tag with name ${t.name} already exists`)
+            continue
+        }
+
+        const tag = await prisma.recipeTag.create({
+            data: t,
+        });
+        console.log(`Created tag with id: ${tag.id}`)
     }
 
     // Seed recipes

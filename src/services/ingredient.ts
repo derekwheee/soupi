@@ -6,9 +6,9 @@ type RecipeWithJoins = Prisma.RecipeGetPayload<{
     include: { ingredients: true, tags: true }
 }>;
 
-export async function parseIngredients(recipeId: number): Promise<RecipeWithJoins>;
-export async function parseIngredients(recipe: any): Promise<RecipeWithJoins>;
-export async function parseIngredients(arg: number | RecipeWithJoins): Promise<RecipeWithJoins> {
+export async function parseIngredients(recipeId: number, isRetry?: boolean): Promise<RecipeWithJoins>;
+export async function parseIngredients(recipe: any, isRetry?: boolean): Promise<RecipeWithJoins>;
+export async function parseIngredients(arg: number | RecipeWithJoins, isRetry?: boolean): Promise<RecipeWithJoins> {
     const recipe: RecipeWithJoins =
         typeof arg === 'number'
             ? await prisma.recipe.findUniqueOrThrow({
@@ -31,6 +31,15 @@ export async function parseIngredients(arg: number | RecipeWithJoins): Promise<R
     if (result.error) {
         console.error('Failed to execute:', result.error);
         throw new Error(result.error.message || String(result.error));
+    }
+
+    if (result.stdout.startsWith('Downloading')) {
+        // Retry once if the model is being downloaded
+        if (isRetry) {
+            throw new Error('NLP model is still downloading, please try again later');
+        }
+
+        return parseIngredients(recipe, true);
     }
 
     const parsedIngredients = JSON.parse(result.stdout);

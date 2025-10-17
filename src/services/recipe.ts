@@ -27,8 +27,8 @@ export async function getAllRecipes(
     return prisma.recipe.findMany({
         where: { householdId, deletedAt: null },
         include: {
-            ingredients: true,
-            tags: true,
+            ingredients: { orderBy: { id: 'asc' } },
+            tags: { orderBy: { id: 'asc' } },
         },
     });
 }
@@ -40,8 +40,8 @@ export async function getRecipe(
     return prisma.recipe.findUniqueOrThrow({
         where: { id, householdId },
         include: {
-            ingredients: true,
-            tags: true,
+            ingredients: { orderBy: { id: 'asc' } },
+            tags: { orderBy: { id: 'asc' } },
         },
     });
 }

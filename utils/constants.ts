@@ -19,5 +19,17 @@ export const DEFAULT_CATEGORIES = [
     { icon: '🪥', name: 'Personal Care', sortOrder: 17, isNonFood: true },
     { icon: '💊', name: 'Health', sortOrder: 18, isNonFood: true },
     { icon: '🛠️', name: 'Hardware', sortOrder: 19, isNonFood: true },
-    { icon: '🛒', name: 'Other', sortOrder: 20 }
+    { icon: '🛒', name: 'Other', sortOrder: 20 },
+];
+
+export const DEFAuLT_TAGS = [
+    { name: 'breakfast' },
+    { name: 'brunch' },
+    { name: 'lunch' },
+    { name: 'dinner' },
+    { name: 'dessert' },
+    { name: 'side dish' },
+    { name: 'easy' },
+    { name: 'quick' },
+    { name: 'vegetarian' },
 ];
