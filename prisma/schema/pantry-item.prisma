@@ -1,7 +1,7 @@
 model PantryItem {
     id               Int           @id @default(autoincrement())
     name             String
-    isInStock        Boolean       @default(true)
+    isInStock        Boolean       @default(false)
     isFavorite       Boolean       @default(false)
     isInShoppingList Boolean       @default(false)
     purchasedAt      DateTime?
