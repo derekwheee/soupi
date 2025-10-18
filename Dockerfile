@@ -1,5 +1,23 @@
 FROM node:lts-bookworm-slim
 
+# Install only what's required for headless Chromium
+RUN apt-get update && apt-get install -y \
+    chromium \
+    libnss3 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    libxshmfence1 \
+    fonts-liberation \
+    && rm -rf /var/lib/apt/lists/*
+
+# Let Puppeteer know to use system Chromium and skip its own download
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 # Install Python and venv support
 RUN apt-get update && \
     apt-get install -y python3 python3-venv python3-pip build-essential && \
