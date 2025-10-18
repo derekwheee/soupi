@@ -28,7 +28,7 @@ router.get(
                 return res.status(400).json({ error: 'Missing url param' });
             }
 
-            const recipe: RecipeJSON = await scrapeRecipe(url);
+            const recipe: RecipeJSON | null = await scrapeRecipe(url);
             res.json(recipe);
         } catch (err) {
             console.error(err);

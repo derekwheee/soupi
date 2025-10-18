@@ -13,27 +13,40 @@ export async function getById(id: string): Promise<User | null> {
 }
 
 export async function createUser(user: ClerkUser): Promise<User> {
-    return prisma.user.create({
-        data: {
-            id: user.id,
-            clerkId: user.id,
-            email: user.emailAddresses[0]?.emailAddress || '',
-            name: user.fullName || '',
-            households: {
-                create: {
-                    name: 'My Household',
-                    pantries: {
-                        create: {
-                            name: 'My Pantry',
-                            isDefault: true,
-                            itemCategories: {
-                                create: DEFAULT_CATEGORIES
+    return prisma.$transaction(async (tx) => {
+        const created = await tx.user.create({
+            data: {
+                id: user.id,
+                clerkId: user.id,
+                email: user.emailAddresses?.[0]?.emailAddress || '',
+                name: user.fullName || '',
+                households: {
+                    create: {
+                        name: 'My Household',
+                        pantries: {
+                            create: {
+                                name: 'My Pantry',
+                                isDefault: true,
+                                itemCategories: {
+                                    create: DEFAULT_CATEGORIES
+                                }
                             }
                         }
                     }
                 }
-            }
-        }
+            },
+            include: { households: true }
+        });
+
+        const householdId = created.households?.[0]?.id;
+        if (!householdId) return created;
+
+        const updated = await tx.user.update({
+            where: { id: created.id },
+            data: { defaultHouseholdId: householdId }
+        });
+
+        return updated;
     });
 }
 

@@ -52,13 +52,15 @@ export async function createRecipeFromUrl(
 ): Promise<RecipeWithJoins> {
     const recipeData = await scrapeRecipe(url);
 
+    if (!recipeData) {
+        throw new Error('Failed to scrape recipe from URL');
+    }
+
     const recipe: RecipeUpsert = {
         name: recipeData.name || 'Untitled Recipe',
         prepTime: parseTimes(recipeData.prepTime),
         cookTime: parseTimes(recipeData.cookTime),
-        servings: recipeData.recipeYield
-            ? Number(recipeData.recipeYield)
-            : null,
+        servings: recipeData.servings,
         instructions: recipeData.instructions,
         ingredients: recipeData.ingredients,
     };
