@@ -30,7 +30,16 @@ function cleanInstructions(recipeInstructions: any): string[] {
 }
 
 export async function scrapeRecipe(url: string): Promise<RecipeJSON | null> {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-extensions',
+            '--disable-gpu',
+        ],
+    });
     const page = await browser.newPage();
 
     let textToParse;
@@ -111,7 +120,9 @@ async function getTikTokRecipe(page: Page, url: string) {
     return metaTags?.find((tag) => tag.property === 'og:description')?.content;
 }
 
-function parseTimes(time?: string | null | undefined) : string | null | undefined {
+function parseTimes(
+    time?: string | null | undefined,
+): string | null | undefined {
     if (!time) return time;
 
     if (time.match(/PT\d+\w+/)) {
@@ -135,4 +146,4 @@ function parseTimes(time?: string | null | undefined) : string | null | undefine
     }
 
     return time;
-};
+}

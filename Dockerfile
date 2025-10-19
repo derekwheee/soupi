@@ -38,7 +38,7 @@ COPY python/requirements.txt ./python/requirements.txt
 COPY . .
 
 # Install Node.js dependencies
-RUN if [ -f package.json ]; then npm install; fi
+RUN if [ -f package.json ]; then npm ci; fi
 
 # Upgrade pip inside venv and install Python deps into the venv
 RUN pip install --upgrade pip setuptools wheel
@@ -46,6 +46,9 @@ RUN if [ -f python/requirements.txt ]; then pip install -r python/requirements.t
 
 # Make parser executable
 RUN chmod +x python/parser.py python/scraper.py
+
+RUN npm install -g prisma
+RUN prisma generate --no-engine
 
 # Railway uses PORT env variable
 ENV PORT=8080

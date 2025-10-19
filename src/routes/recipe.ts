@@ -8,7 +8,7 @@ import {
     getAllRecipeTags,
 } from '../controllers/recipe';
 import { scrapeRecipe, RecipeJSON } from '../services/scraper';
-import { requireAuth } from '@clerk/express';
+import requireAuth from '../middleware/require-auth';
 
 const router = Router();
 const prefix = '/household/:householdId/recipes';

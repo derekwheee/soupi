@@ -1,4 +1,4 @@
-import { requireAuth } from '@clerk/express';
+import requireAuth from '../middleware/require-auth';
 import { Router } from 'express';
 import {
     getPantries,

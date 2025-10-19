@@ -11,7 +11,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(clerkMiddleware());
+app.use(clerkMiddleware({ debug: true }));
 
 app.use('/meta', metaRoutes);
 app.use('/user', userRoutes);
