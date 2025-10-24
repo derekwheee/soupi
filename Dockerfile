@@ -31,11 +31,13 @@ RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy package.json and requirements.txt early for caching
-COPY package.json ./
+COPY dist/package.json ./
 COPY python/requirements.txt ./python/requirements.txt
 
 # Copy the rest of the application code
-COPY . .
+COPY ./dist .
+COPY ./prisma/schema ./prisma/schema
+COPY ./python ./python
 
 # Install Node.js dependencies
 RUN if [ -f package.json ]; then npm ci; fi
@@ -54,4 +56,4 @@ RUN prisma generate --no-engine
 ENV PORT=8080
 
 # Default command (adjust as needed)
-CMD ["npm", "start"]
+CMD ["node", "src/server.js"]

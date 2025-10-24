@@ -6,7 +6,9 @@
     "scripts": {
         "start": "ts-node src/server.ts",
         "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-        "docker:rebuild": "docker rm -f soupi || true && docker build -t soupi . && docker run -d -p 8080:8080 --env-file .env-docker --name soupi soupi"
+        "dist": "node src/server.js",
+        "build": "tsc -p tsconfig.json",
+        "docker:rebuild": "tsc -p tsconfig.json && docker rm -f soupi || true && docker build -t soupi . && docker run -d -p 8080:8080 --env-file .env-docker --name soupi soupi"
     },
     "imports": {
         "#*": "./src/*"

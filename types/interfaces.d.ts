@@ -1,5 +1,9 @@
-interface BroadcastMessage {
-    type: SSEMessageType;
-    from: string;
-    data: any;
+export {};
+
+declare global {
+    interface BroadcastMessage {
+        type: SSEMessageType;
+        from: string;
+        data: any;
+    }
 }

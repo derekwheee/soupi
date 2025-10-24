@@ -10,10 +10,9 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "resolveJsonModule": true,
-        "typeRoots": ["./types", "./node_modules/@types"]
+        "typeRoots": ["./types", "./node_modules/@types"],
+        "types": ["node"]
     },
-    "include": [
-        "src",
-        "types/**/*.d.ts"
-    ]
+    "include": ["src/**/*.ts", "src/**/*.tsx", "types/**/*.d.ts"],
+    "exclude": ["node_modules/**/*", "dist"]
 }
