@@ -1,7 +1,7 @@
 model User {
     id                 String    @id
     clerkId            String    @unique
-    email              String    @unique
+    email              String?
     name               String?
     defaultHouseholdId Int?
     createdAt          DateTime  @default(now())

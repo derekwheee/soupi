@@ -33,3 +33,9 @@ export const DEFAuLT_TAGS = [
     { name: 'quick' },
     { name: 'vegetarian' },
 ];
+
+export enum SSEMessageType {
+    RECIPE_UPDATE = 'recipe_update',
+    RECIPE_DELETE = 'recipe_delete',
+    PANTRY_UPDATE = 'pantry_update',
+}

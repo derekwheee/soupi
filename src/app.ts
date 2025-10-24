@@ -4,6 +4,7 @@ import userRoutes from './routes/user';
 import recipeRoutes from './routes/recipe';
 import pantryRoutes from './routes/pantry';
 import metaRoutes from './routes/meta';
+import eventRoutes from './routes/events';
 import householdRoutes from './routes/household';
 import { clerkMiddleware } from '@clerk/express'
 
@@ -18,5 +19,6 @@ app.use('/user', userRoutes);
 app.use('/', recipeRoutes);
 app.use('/', pantryRoutes);
 app.use('/', householdRoutes);
+app.use('/events', eventRoutes);
 
 export default app;

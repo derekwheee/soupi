@@ -1,47 +1,49 @@
 {
-  "name": "express",
-  "version": "0.1.1",
-  "license": "MIT",
-  "scripts": {
-    "start": "ts-node src/server.ts",
-    "dev": "nodemon src/server.ts",
-    "docker:rebuild": "docker rm -f soupi || true && docker build -t soupi . && docker run -d -p 8080:8080 --env-file .env-docker --name soupi soupi"
-  },
-  "imports": {
-    "#*": "./src/*"
-  },
-  "dependencies": {
-    "@ai-sdk/mistral": "^2.0.19",
-    "@clerk/express": "^1.7.37",
-    "@prisma/client": "6.9.0",
-    "@prisma/extension-accelerate": "2.0.2",
-    "ai": "^5.0.76",
-    "axios": "^1.12.2",
-    "cheerio": "^1.1.2",
-    "cors": "^2.8.5",
-    "express": "5.1.0",
-    "he": "^1.2.0",
-    "puppeteer": "^24.25.0",
-    "zod": "^4.1.12"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.36.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "5.0.3",
-    "@types/he": "^1.2.3",
-    "@types/node": "22.15.32",
-    "dotenv": "^17.2.3",
-    "eslint": "^9.36.0",
-    "eslint-plugin-perfectionist": "^4.15.0",
-    "nodemon": "^3.1.10",
-    "prettier": "^3.6.2",
-    "prisma": "6.9.0",
-    "ts-node": "10.9.2",
-    "typescript": "5.8.2",
-    "typescript-eslint": "^8.45.0"
-  },
-  "prisma": {
-    "schema": "./prisma/schema",
-    "seed": "ts-node prisma/seed.ts"
-  }
+    "private": true,
+    "name": "soupi",
+    "version": "0.1.1",
+    "license": "MIT",
+    "scripts": {
+        "start": "ts-node src/server.ts",
+        "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+        "docker:rebuild": "docker rm -f soupi || true && docker build -t soupi . && docker run -d -p 8080:8080 --env-file .env-docker --name soupi soupi"
+    },
+    "imports": {
+        "#*": "./src/*"
+    },
+    "dependencies": {
+        "@ai-sdk/mistral": "^2.0.19",
+        "@clerk/express": "^1.7.37",
+        "@prisma/client": "6.9.0",
+        "@prisma/extension-accelerate": "2.0.2",
+        "ai": "^5.0.76",
+        "axios": "^1.12.2",
+        "cheerio": "^1.1.2",
+        "cors": "^2.8.5",
+        "express": "5.1.0",
+        "he": "^1.2.0",
+        "puppeteer": "^24.25.0",
+        "zod": "^4.1.12"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.36.0",
+        "@types/cors": "^2.8.19",
+        "@types/express": "5.0.3",
+        "@types/he": "^1.2.3",
+        "@types/node": "22.15.32",
+        "dotenv": "^17.2.3",
+        "eslint": "^9.36.0",
+        "eslint-plugin-perfectionist": "^4.15.0",
+        "nodemon": "^3.1.10",
+        "prettier": "^3.6.2",
+        "prisma": "6.9.0",
+        "ts-node": "10.9.2",
+        "ts-node-dev": "^2.0.0",
+        "typescript": "5.8.2",
+        "typescript-eslint": "^8.45.0"
+    },
+    "prisma": {
+        "schema": "./prisma/schema",
+        "seed": "ts-node prisma/seed.ts"
+    }
 }

@@ -1,5 +1,7 @@
 import { Pantry, PantryItem } from '@prisma/client';
 import prisma from '../../prisma';
+import { broadcast } from '../../utils/sse';
+import { SSEMessageType } from '../../utils/constants';
 
 export async function getPantries(householdId: number): Promise<Pantry[]> {
     return prisma.pantry.findMany({
@@ -39,32 +41,42 @@ export async function upsertPantryItem(
     householdId: number,
     item: PantryItem,
 ): Promise<PantryItem> {
-    // Validate household access to pantryId
-    const pantry = await prisma.pantry.findUniqueOrThrow({
-        where: { id: item.pantryId, householdId },
-    });
+    return await broadcast<PantryItem>(
+        householdId,
+        SSEMessageType.PANTRY_UPDATE,
+        'upsertPantryItem',
+        async () => {
+            // Validate household access to pantryId
+            const pantry = await prisma.pantry.findUniqueOrThrow({
+                where: { id: item.pantryId, householdId },
+            });
 
-    if (!pantry) {
-        throw new Error('Pantry not found or access denied');
-    }
+            if (!pantry) {
+                throw new Error('Pantry not found or access denied');
+            }
 
-    const { id, ...data } = item;
+            const { id, ...data } = item;
 
-    const existing = await prisma.pantryItem.findFirst({
-        where: {
-            OR: [id ? { id } : {}, { name: item.name }],
+            const existing = await prisma.pantryItem.findFirst({
+                where: {
+                    OR: [id ? { id } : {}, { name: item.name }],
+                },
+            });
+
+            if (existing) {
+                return prisma.pantryItem.update({
+                    where: { id: existing.id },
+                    data,
+                });
+            }
+
+            return prisma.pantryItem.create({
+                data: {
+                    ...data,
+                },
+            });
         },
-    });
-
-    if (existing) {
-        return prisma.pantryItem.update({ where: { id: existing.id }, data });
-    }
-
-    return prisma.pantryItem.create({
-        data: {
-            ...data,
-        },
-    });
+    );
 }
 
 export async function getPantryCategories(pantryId: number) {

@@ -2,6 +2,8 @@ import { Prisma, Recipe } from '@prisma/client';
 import prisma from '../../prisma';
 import { parseIngredients } from './ingredient';
 import { scrapeRecipe } from './scraper';
+import { broadcast } from '../../utils/sse';
+import { SSEMessageType } from '../../utils/constants';
 
 type RecipeWithJoins = Prisma.RecipeGetPayload<{
     include: {
@@ -24,6 +26,11 @@ type RecipeUpsert = {
 export async function getAllRecipes(
     householdId: number,
 ): Promise<RecipeWithJoins[]> {
+    // broadcast(householdId, {
+    //     type: SSEMessageType.RECIPE_UPDATE,
+    //     from: 'getAllRecipes',
+    //     data: {},
+    // });
     return prisma.recipe.findMany({
         where: { householdId, deletedAt: null },
         include: {
@@ -72,49 +79,63 @@ export async function upsertRecipe(
     householdId: number,
     patch: RecipeUpsert,
 ): Promise<RecipeWithJoins> {
-    const { id, ingredients, tags = [], ...data } = patch;
-    let updatedRecipe;
+    return await broadcast<RecipeWithJoins>(
+        householdId,
+        SSEMessageType.RECIPE_UPDATE,
+        'upsertRecipe',
+        async () => {
+            const { id, ingredients, tags = [], ...data } = patch;
+            let updatedRecipe;
 
-    if (!id) {
-        updatedRecipe = await prisma.recipe.create({
-            data: {
-                ...(data as Prisma.RecipeUncheckedCreateInput),
-                householdId,
-                tags: {
-                    connectOrCreate: tags.map((tag) => ({
-                        where: { name: tag.name, householdId },
-                        create: { name: tag.name, householdId },
-                    })),
-                },
-            },
-        });
-    } else {
-        updatedRecipe = await prisma.recipe.update({
-            where: { id, householdId },
-            data: {
-                ...(data as Prisma.RecipeUpdateInput),
-                tags: {
-                    set: [],
-                    connectOrCreate: tags.map((tag) => ({
-                        where: { name: tag.name, householdId },
-                        create: { name: tag.name, householdId },
-                    })),
-                },
-            },
-        });
-    }
+            if (!id) {
+                updatedRecipe = await prisma.recipe.create({
+                    data: {
+                        ...(data as Prisma.RecipeUncheckedCreateInput),
+                        householdId,
+                        tags: {
+                            connectOrCreate: tags.map((tag) => ({
+                                where: { name: tag.name, householdId },
+                                create: { name: tag.name, householdId },
+                            })),
+                        },
+                    },
+                });
+            } else {
+                updatedRecipe = await prisma.recipe.update({
+                    where: { id, householdId },
+                    data: {
+                        ...(data as Prisma.RecipeUpdateInput),
+                        tags: {
+                            set: [],
+                            connectOrCreate: tags.map((tag) => ({
+                                where: { name: tag.name, householdId },
+                                create: { name: tag.name, householdId },
+                            })),
+                        },
+                    },
+                });
+            }
 
-    return processIngredients(updatedRecipe, ingredients);
+            return processIngredients(updatedRecipe, ingredients);
+        },
+    );
 }
 
 export async function deleteRecipe(
     householdId: number,
     id: number,
 ): Promise<void> {
-    await prisma.recipe.update({
-        where: { id, householdId },
-        data: { deletedAt: new Date() },
-    });
+    broadcast<void>(
+        householdId,
+        SSEMessageType.RECIPE_DELETE,
+        'deleteRecipe',
+        async () => {
+            await prisma.recipe.update({
+                where: { id, householdId },
+                data: { deletedAt: new Date() },
+            });
+        },
+    );
 }
 
 export async function getAllRecipeTags(householdId: number) {
