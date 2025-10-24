@@ -51,7 +51,7 @@ export async function parseIngredients(arg: number | RecipeWithJoins, isRetry?: 
             ...ingredient,
             item: parsed?.name?.[0].text,
             size: parsed?.size?.text,
-            amount: parsed?.amount[0]?.quantity,
+            amount: parsed?.amount[0]?.quantity || null,
             unit: parsed?.amount[0]?.unit,
             preparation: parsed?.preparation?.text,
             json: parsed

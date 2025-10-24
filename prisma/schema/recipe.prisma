@@ -12,7 +12,7 @@ model Recipe {
     name         String
     prepTime     String?
     cookTime     String?
-    servings     Int?
+    servings     String?
     instructions Json?
     createdAt    DateTime     @default(now())
     updatedAt    DateTime     @updatedAt

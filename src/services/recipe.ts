@@ -18,7 +18,7 @@ type RecipeUpsert = {
     name?: string;
     prepTime?: string | null;
     cookTime?: string | null;
-    servings?: number | null;
+    servings?: string | null;
     instructions?: string[] | null;
     tags?: { id: number; name: string }[];
 };

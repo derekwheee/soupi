@@ -2,12 +2,13 @@ import puppeteer, { Page } from 'puppeteer';
 import { mistral } from '@ai-sdk/mistral';
 import { generateObject } from 'ai';
 import { z } from 'zod';
+import { text } from 'node:stream/consumers';
 
 export interface RecipeJSON {
     name: string | null;
     prepTime: string | null;
     cookTime: string | null;
-    servings: number | null;
+    servings: string | null;
     ingredients: string[];
     instructions: string[];
 }
@@ -29,7 +30,10 @@ function cleanInstructions(recipeInstructions: any): string[] {
         .filter((step) => step.length > 0 && /\s/.test(step));
 }
 
-export async function scrapeRecipe(url: string): Promise<RecipeJSON | null> {
+export async function scrapeRecipe(
+    url: string,
+    { isRetry }: { isRetry?: boolean } = {},
+): Promise<RecipeJSON | null> {
     const browser = await puppeteer.launch({
         headless: true,
         args: [
@@ -44,15 +48,17 @@ export async function scrapeRecipe(url: string): Promise<RecipeJSON | null> {
 
     let textToParse;
 
-    if (url.toLowerCase().includes('tiktok.com')) {
-        textToParse = await getTikTokRecipe(page, url);
+    const useMetaUrls = ['tiktok.com', 'instagram.com'];
+
+    if (useMetaUrls.some((metaUrl) => url.toLowerCase().includes(metaUrl))) {
+        textToParse = await getRecipeFromMeta(page, url);
     } else {
         textToParse = await parseWebsiteRecipe(page, url);
     }
 
+    await browser.close();
+
     if (!textToParse) {
-        console.error('No text to parse found.');
-        await browser.close();
         return null;
     }
 
@@ -62,21 +68,37 @@ export async function scrapeRecipe(url: string): Promise<RecipeJSON | null> {
             name: z.string(),
             prepTime: z.string().optional(),
             cookTime: z.string().optional(),
-            servings: z.number().min(1).optional(),
+            servings: z.string().optional(),
             ingredients: z.array(z.string()),
             instructions: z.array(z.string()),
+            explanation: z.string().optional(),
+            externalLink: z.string().optional(),
         }),
         prompt: `
             Parse the following text into a recipe and format it as JSON.
+            Never under any circumstances should you hallucinate recipe details.
+            Only include what you can confidently parse from the text.
+            If you cannot find a field, simply omit it from the output.
+            If you find a link to a recipe, return it in the externalLink field.
             If you're not confident about any field, omit it.
             The text may be plain text, or a string of JSON-LD from a webpage.
             The text may contain extraneous information, so only include relevant recipe details.
-            ${textToParse}
+            In the explanation field, briefly explain how you parsed the recipe.
+            
+            Text to parse:
+            ${textToParse.toString()}
         `,
     });
 
     const recipe = parsed?.object;
-    await browser.close();
+
+    if (
+        !recipe?.ingredients?.length &&
+        parsed?.object?.externalLink &&
+        !isRetry
+    ) {
+        return scrapeRecipe(parsed.object.externalLink, { isRetry: true });
+    }
 
     return recipe
         ? {
@@ -92,17 +114,29 @@ export async function scrapeRecipe(url: string): Promise<RecipeJSON | null> {
 
 async function parseWebsiteRecipe(page: Page, url: string) {
     await page.goto(url, {
-        waitUntil: 'domcontentloaded',
+        timeout: 10000,
+        waitUntil: 'networkidle2',
     });
 
-    const ldJsonElement = await page.$('script[type="application/ld+json"]');
-    return ldJsonElement
-        ? await ldJsonElement.evaluate((el: HTMLScriptElement) => el.innerText)
-        : null;
+    return await page.evaluate(() => {
+        const matchWords = ['recipe', 'ingredients'];
+
+        return Array.from(
+            document.querySelectorAll<HTMLElement>(
+                'script[type="application/ld+json"]',
+            ),
+        )
+            .map((el) => el.innerText)
+            .filter((text) =>
+                matchWords.some((word) => text.toLowerCase().includes(word)),
+            )
+            .join(',');
+    });
 }
 
-async function getTikTokRecipe(page: Page, url: string) {
+async function getRecipeFromMeta(page: Page, url: string) {
     await page.goto(url, {
+        timeout: 10000,
         waitUntil: 'networkidle2',
     });
 

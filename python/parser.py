@@ -10,6 +10,7 @@ sys.path.append(str(script_dir))
 
 import scraper
 from ingredient_parser import parse_ingredient
+from fractions import Fraction
 
 def ingredient_to_dict(ingredient):
     def text_to_dict(text_obj):
@@ -24,9 +25,23 @@ def ingredient_to_dict(ingredient):
     def amount_to_dict(amount_obj):
         if amount_obj is None:
             return None
+        # Convert quantity and quantity_max to float if they are Fraction objects
+
+        def to_float(val):
+            if isinstance(val, Fraction):
+                return float(val)
+            try:
+                # Try to parse string like "Fraction(3, 2)"
+                if isinstance(val, str) and val.startswith("Fraction"):
+                    nums = val.strip("Fraction()").split(",")
+                    return float(Fraction(int(nums[0]), int(nums[1])))
+            except Exception:
+                pass
+            return val
+
         return {
-            "quantity": float(amount_obj.quantity),
-            "quantity_max": float(amount_obj.quantity_max),
+            "quantity": to_float(amount_obj.quantity),
+            "quantity_max": to_float(amount_obj.quantity_max),
             "unit": str(amount_obj.unit),
             "text": amount_obj.text,
             "confidence": amount_obj.confidence,
@@ -79,7 +94,6 @@ def main():
     group.add_argument("-u", "--url", type=str, help="URL of a recipe page to scrape and parse")
     group.add_argument("-s", "--sentence", type=str, help="Single ingredient sentence to parse")
     group.add_argument("-j", "--json", type=str, help="JSON file with ingredient strings")
-    parser.add_argument("-o", "--output", type=str, help="Output JSON file path (if not provided, prints to stdout)", default=None)
 
     args = parser.parse_args()
     ingredients = None
@@ -112,23 +126,7 @@ def main():
         parsed_ingredients = parse_ingredients(ingredients)
         result = [ingredient_to_dict(pi) for pi in parsed_ingredients]
         
-        try:
-            if args.output:
-                # Convert relative path to absolute path if necessary
-                output_path = args.output if os.path.isabs(args.output) else os.path.abspath(args.output)
-                with open(output_path, "w") as f:
-                    json.dump(result, f, indent=2)
-                print(json.dumps({
-                    'status': 'success',
-                    'parsed_count': len(parsed_ingredients),
-                    'output_file': output_path
-                }))
-            else:
-                # Print results directly to stdout
-                print(json.dumps(result, indent=2))
-        except Exception as e:
-            print(f"Error writing to file: {e}", file=sys.stderr)
-            print([ingredient_to_dict(pi) for pi in parsed_ingredients])
+        print(json.dumps(result, indent=2))
     else:
         recipe_data['error'] = 'No ingredients found on page'
         
