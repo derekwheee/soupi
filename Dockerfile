@@ -31,13 +31,11 @@ RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy package.json and requirements.txt early for caching
-COPY dist/package.json ./
+COPY package.json ./
 COPY python/requirements.txt ./python/requirements.txt
 
 # Copy the rest of the application code
-COPY ./dist .
-COPY ./prisma/schema ./prisma/schema
-COPY ./python ./python
+COPY . .
 
 # Install Node.js dependencies
 RUN if [ -f package.json ]; then npm ci; fi
@@ -49,11 +47,14 @@ RUN if [ -f python/requirements.txt ]; then pip install -r python/requirements.t
 # Make parser executable
 RUN chmod +x python/parser.py python/scraper.py
 
+RUN npm run build
+COPY ./prisma/schema ./dist/prisma/schema
+
 RUN npm install -g prisma
-RUN prisma generate --no-engine
+RUN cd dist && prisma generate --no-engine
 
 # Railway uses PORT env variable
 ENV PORT=8080
 
 # Default command (adjust as needed)
-CMD ["node", "src/server.js"]
+CMD ["node", "dist/src/server.js"]
