@@ -5,6 +5,7 @@ import recipeRoutes from './routes/recipe';
 import pantryRoutes from './routes/pantry';
 import metaRoutes from './routes/meta';
 import eventRoutes from './routes/events';
+import aiRoutes from './routes/ai';
 import householdRoutes from './routes/household';
 import { clerkMiddleware } from '@clerk/express'
 
@@ -20,5 +21,6 @@ app.use('/', recipeRoutes);
 app.use('/', pantryRoutes);
 app.use('/', householdRoutes);
 app.use('/events', eventRoutes);
+app.use('/ai', aiRoutes);
 
 export default app;

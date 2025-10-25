@@ -2,7 +2,6 @@ import puppeteer, { Page } from 'puppeteer';
 import { mistral } from '@ai-sdk/mistral';
 import { generateObject } from 'ai';
 import { z } from 'zod';
-import { text } from 'node:stream/consumers';
 
 export interface RecipeJSON {
     name: string | null;

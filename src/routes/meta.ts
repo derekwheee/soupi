@@ -4,13 +4,14 @@ import PackageJson from '../../package.json';
 
 const router = Router();
 
-router.get('/', (res, req) => controller(res, req, () => {
-
-    return {
-        name: "soupi",
-        version: PackageJson.version,
-        status: "ok"
-    };
-}));
+router.get('/', (res, req) =>
+    controller(res, req, () => {
+        return {
+            name: 'soupi',
+            version: PackageJson.version,
+            status: 'ok',
+        };
+    }),
+);
 
 export default router;
