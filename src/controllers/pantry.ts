@@ -36,10 +36,3 @@ export async function getPantryItem(req: Request, res: Response) {
         ),
     );
 }
-
-export async function getPantryCategories(req: Request, res: Response) {
-    const { pantryId } = req.params;
-    return await householdController(req, res, () =>
-        pantryService.getPantryCategories(Number(pantryId)),
-    );
-}

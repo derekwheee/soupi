@@ -1,12 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import userRoutes from './routes/user';
+import householdRoutes from './routes/household';
 import recipeRoutes from './routes/recipe';
 import pantryRoutes from './routes/pantry';
+import categoryRoutes from './routes/category';
 import metaRoutes from './routes/meta';
 import eventRoutes from './routes/events';
 import aiRoutes from './routes/ai';
-import householdRoutes from './routes/household';
 import { clerkMiddleware } from '@clerk/express'
 
 const app = express();
@@ -17,9 +18,10 @@ app.use(clerkMiddleware({ debug: true }));
 
 app.use('/meta', metaRoutes);
 app.use('/user', userRoutes);
+app.use('/', householdRoutes);
 app.use('/', recipeRoutes);
 app.use('/', pantryRoutes);
-app.use('/', householdRoutes);
+app.use('/', categoryRoutes);
 app.use('/events', eventRoutes);
 app.use('/ai', aiRoutes);
 

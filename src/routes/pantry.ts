@@ -5,7 +5,6 @@ import {
     getAllPantryItems,
     getPantryItem,
     upsertPantryItem,
-    getPantryCategories
 } from '../controllers/pantry';
 
 const router = Router();
@@ -15,6 +14,5 @@ router.get(prefix, getPantries);
 router.post(`${prefix}/:pantryId`, upsertPantryItem);
 router.get(`${prefix}/:pantryId/items`, requireAuth(), getAllPantryItems);
 router.get(`${prefix}/:pantryId/items/:itemId`, requireAuth(), getPantryItem);
-router.get(`${prefix}/:pantryId/categories`, requireAuth(), getPantryCategories);
 
 export default router;

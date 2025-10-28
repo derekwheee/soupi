@@ -112,9 +112,15 @@ export async function scrapeRecipe(
 }
 
 async function parseWebsiteRecipe(page: Page, url: string) {
+    // Lots of websites are continuously loading content (thanks ads), so don't wait for networkidle
+    // But youtube content isn't fully loaded when DOMContentLoaded fires
+    const waitUntil = url.includes('youtube.com')
+        ? 'networkidle2'
+        : 'domcontentloaded';
+
     await page.goto(url, {
         timeout: 10000,
-        waitUntil: 'networkidle2',
+        waitUntil,
     });
 
     return await page.evaluate(() => {
