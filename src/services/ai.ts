@@ -69,16 +69,18 @@ export async function getRecipeSuggestions(
 export async function getExpiringPantryItems(
     pantryId: number,
 ): Promise<PantryItem[]> {
-    const items = await prisma.pantryItem.findMany({
+    const itemsToUpdate = await prisma.pantryItem.findMany({
         where: {
             pantryId,
             isInStock: true,
             purchasedAt: { not: null },
+            expiresAt: null,
             deletedAt: null,
         },
     });
 
-    const prompt = `
+    if (!!itemsToUpdate.length) {
+        const prompt = `
         Given the following list of pantry items with their purchased dates,
         provide updated expiration dates for each item based on typical shelf life.
         Use the item name and purchased date to determine an appropriate expiration date.
@@ -95,7 +97,7 @@ export async function getExpiringPantryItems(
         
         Pantry items:
         ${JSON.stringify(
-            items.map((item) => ({
+            itemsToUpdate.map((item) => ({
                 id: item.id,
                 name: item.name,
                 purchasedAt: item.purchasedAt,
@@ -105,30 +107,48 @@ export async function getExpiringPantryItems(
         )}
     `;
 
-    const parsed = await generateObject({
-        model: openai('gpt-4o-mini'),
-        schema: z.object({
-            pantryItems: z.array(
-                z.object({
-                    id: z.number(),
-                    name: z.string(),
-                    purchasedAt: z.string(),
-                    expiresAt: z.string(),
-                }),
-            ),
-        }),
-        mode: 'json',
-        prompt,
-    });
+        const parsed = await generateObject({
+            model: openai('gpt-4o-mini'),
+            schema: z.object({
+                pantryItems: z.array(
+                    z.object({
+                        id: z.number(),
+                        name: z.string(),
+                        purchasedAt: z.string(),
+                        expiresAt: z.string(),
+                    }),
+                ),
+            }),
+            mode: 'json',
+            prompt,
+        });
 
-    if (!parsed) {
-        return [];
+        if (!parsed) {
+            return [];
+        }
+
+        const expiring = parsed.object.pantryItems;
+
+        for (const item of expiring) {
+            await prisma.pantryItem.update({
+                where: { id: item.id },
+                data: { expiresAt: new Date(item.expiresAt) },
+            });
+        }
     }
 
     const today = new Date();
 
-    return parsed.object.pantryItems
-        .filter((item) => Math.abs(daysBetween(new Date(item.expiresAt), today)) < EXPIRATION_WINDOW)
-        .map((item) => items.find((i) => i.id === item.id))
-        .filter((item): item is PantryItem => item !== undefined);
+    return prisma.pantryItem.findMany({
+        where: {
+            pantryId,
+            expiresAt: {
+                lte: new Date(
+                    today.getTime() + EXPIRATION_WINDOW * 24 * 60 * 60 * 1000,
+                ),
+            },
+            isInStock: true,
+            deletedAt: null,
+        },
+    });
 }

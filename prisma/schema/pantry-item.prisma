@@ -5,6 +5,7 @@ model PantryItem {
     isFavorite       Boolean       @default(false)
     isInShoppingList Boolean       @default(false)
     purchasedAt      DateTime?
+    expiresAt        DateTime?
     createdAt        DateTime      @default(now())
     updatedAt        DateTime      @updatedAt
     deletedAt        DateTime?
