@@ -22,7 +22,7 @@ export const DEFAULT_CATEGORIES = [
     { icon: '🛒', name: 'Other', sortOrder: 20 },
 ];
 
-export const DEFAuLT_TAGS = [
+export const DEFAULT_TAGS = [
     { name: 'breakfast' },
     { name: 'brunch' },
     { name: 'lunch' },
@@ -40,3 +40,5 @@ export enum SSEMessageType {
     PANTRY_UPDATE = 'pantry_update',
     CATEGORY_UPDATE = 'category_update',
 }
+
+export const EXPIRATION_WINDOW = 30; // days

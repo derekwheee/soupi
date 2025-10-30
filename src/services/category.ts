@@ -41,8 +41,6 @@ export async function upsertCategory(
 
             const { id, ...data } = item;
 
-            console.log('upsertCategory existing check', id, item.name);
-
             const existing = await prisma.itemCategory.findFirst({
                 where: {
                     pantryId,
@@ -60,6 +58,7 @@ export async function upsertCategory(
             return prisma.itemCategory.create({
                 data: {
                     ...data,
+                    pantryId,
                 },
             });
         },

@@ -2,7 +2,7 @@ import { PrismaClient, Prisma } from '@prisma/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { parseIngredients } from '../src/services/ingredient';
 import { createRecipeFromUrl } from '../src/services/recipe';
-import { DEFAULT_CATEGORIES, DEFAuLT_TAGS } from '../utils/constants';
+import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../utils/constants';
 
 const prisma = new PrismaClient().$extends(withAccelerate());
 
@@ -51,7 +51,7 @@ async function main() {
         }
     });
 
-    const tags: Prisma.RecipeTagUncheckedCreateInput[] = DEFAuLT_TAGS.map(({ name }) => ({
+    const tags: Prisma.RecipeTagUncheckedCreateInput[] = DEFAULT_TAGS.map(({ name }) => ({
         householdId: household.id,
         name
     }));
