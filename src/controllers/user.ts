@@ -13,6 +13,18 @@ export async function getUser(req: Request, res: Response) {
     return await controller(req, res, () => userService.getById(userId));
 }
 
+export async function updateUser(req: Request, res: Response) {
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    return await controller(req, res, () =>
+        userService.updateUser(userId, req.body),
+    );
+}
+
 export async function syncUser(req: Request, res: Response) {
     const { userId } = getAuth(req);
 

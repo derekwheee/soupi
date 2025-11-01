@@ -7,8 +7,28 @@ export async function getById(id: string): Promise<User | null> {
     return prisma.user.findUnique({
         where: { id },
         include: {
-            households: true
-        }
+            households: true,
+        },
+    });
+}
+
+export async function updateUser(
+    id: string,
+    patch: Partial<User>,
+): Promise<User> {
+    if ('defaultHouseholdId' in patch) {
+        throw new Error(
+            'Use `householdService.joinHousehold` to update defaultHouseholdId',
+        );
+    }
+
+    if ('clerkId' in patch || 'email' in patch || 'name' in patch) {
+        throw new Error('Use `userService.sync` to update clerk parameters');
+    }
+
+    return prisma.user.update({
+        where: { id },
+        data: patch,
     });
 }
 
@@ -28,14 +48,14 @@ export async function createUser(user: ClerkUser): Promise<User> {
                                 name: 'My Pantry',
                                 isDefault: true,
                                 itemCategories: {
-                                    create: DEFAULT_CATEGORIES
-                                }
-                            }
-                        }
-                    }
-                }
+                                    create: DEFAULT_CATEGORIES,
+                                },
+                            },
+                        },
+                    },
+                },
             },
-            include: { households: true }
+            include: { households: true },
         });
 
         const householdId = created.households?.[0]?.id;
@@ -43,7 +63,7 @@ export async function createUser(user: ClerkUser): Promise<User> {
 
         const updated = await tx.user.update({
             where: { id: created.id },
-            data: { defaultHouseholdId: householdId }
+            data: { defaultHouseholdId: householdId },
         });
 
         return updated;
@@ -51,11 +71,12 @@ export async function createUser(user: ClerkUser): Promise<User> {
 }
 
 export async function sync(user: ClerkUser): Promise<User> {
-
-    const existing = await prisma.user.findUnique({ where: { clerkId: user.id } });
+    const existing = await prisma.user.findUnique({
+        where: { clerkId: user.id },
+    });
 
     if (!existing) {
-        return await createUser(user);;
+        return await createUser(user);
     }
 
     return await prisma.user.update({
@@ -63,7 +84,7 @@ export async function sync(user: ClerkUser): Promise<User> {
         data: {
             clerkId: user.id,
             email: user.emailAddresses[0]?.emailAddress || '',
-            name: user.fullName || ''
-        }
+            name: user.fullName || '',
+        },
     });
 }

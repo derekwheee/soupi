@@ -3,6 +3,7 @@ model User {
     clerkId            String    @unique
     email              String?
     name               String?
+    themePreference    String?   @default("system")
     defaultHouseholdId Int?
     createdAt          DateTime  @default(now())
     updatedAt          DateTime  @updatedAt
