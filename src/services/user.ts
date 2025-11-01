@@ -1,7 +1,8 @@
 import { User } from '@prisma/client';
 import prisma from '../../prisma';
 import { User as ClerkUser } from '@clerk/express';
-import { DEFAULT_CATEGORIES } from '../../utils/constants';
+import { DEFAULT_CATEGORIES, SSEMessageType } from '../../utils/constants';
+import { broadcast } from '../../utils/sse';
 
 export async function getById(id: string): Promise<User | null> {
     return prisma.user.findUnique({
@@ -16,20 +17,29 @@ export async function updateUser(
     id: string,
     patch: Partial<User>,
 ): Promise<User> {
-    if ('defaultHouseholdId' in patch) {
-        throw new Error(
-            'Use `householdService.joinHousehold` to update defaultHouseholdId',
-        );
-    }
+    return await broadcast(
+        (await getById(id))!.defaultHouseholdId!,
+        SSEMessageType.USER_UPDATE,
+        'updateUser',
+        async () => {
+            if ('defaultHouseholdId' in patch) {
+                throw new Error(
+                    'Use `householdService.joinHousehold` to update defaultHouseholdId',
+                );
+            }
 
-    if ('clerkId' in patch || 'email' in patch || 'name' in patch) {
-        throw new Error('Use `userService.sync` to update clerk parameters');
-    }
+            if ('clerkId' in patch || 'email' in patch || 'name' in patch) {
+                throw new Error(
+                    'Use `userService.sync` to update clerk parameters',
+                );
+            }
 
-    return prisma.user.update({
-        where: { id },
-        data: patch,
-    });
+            return prisma.user.update({
+                where: { id },
+                data: patch,
+            });
+        },
+    );
 }
 
 export async function createUser(user: ClerkUser): Promise<User> {
@@ -79,12 +89,19 @@ export async function sync(user: ClerkUser): Promise<User> {
         return await createUser(user);
     }
 
-    return await prisma.user.update({
-        where: { id: existing.id },
-        data: {
-            clerkId: user.id,
-            email: user.emailAddresses[0]?.emailAddress || '',
-            name: user.fullName || '',
+    return await broadcast(
+        existing.defaultHouseholdId!,
+        SSEMessageType.USER_UPDATE,
+        'syncUser',
+        async () => {
+            return await prisma.user.update({
+                where: { id: existing.id },
+                data: {
+                    clerkId: user.id,
+                    email: user.emailAddresses[0]?.emailAddress || '',
+                    name: user.fullName || '',
+                },
+            });
         },
-    });
+    );
 }

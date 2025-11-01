@@ -39,6 +39,7 @@ export enum SSEMessageType {
     RECIPE_DELETE = 'recipe_delete',
     PANTRY_UPDATE = 'pantry_update',
     CATEGORY_UPDATE = 'category_update',
+    USER_UPDATE = 'user_update',
 }
 
 export const EXPIRATION_WINDOW = 30; // days
