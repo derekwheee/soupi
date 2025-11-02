@@ -3,9 +3,8 @@ import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import prisma from '../../prisma';
-import { daysBetween } from '../../utils/dates';
 import { FoodExpirationData } from '../../utils/ai';
-import { EXPIRATION_WINDOW } from '../../utils/constants';
+import { EXPIRATION_WINDOW_DAYS } from '../../utils/constants';
 
 export interface RecipeJSON {
     name: string;
@@ -144,7 +143,7 @@ export async function getExpiringPantryItems(
             pantryId,
             expiresAt: {
                 lte: new Date(
-                    today.getTime() + EXPIRATION_WINDOW * 24 * 60 * 60 * 1000,
+                    today.getTime() + EXPIRATION_WINDOW_DAYS * 24 * 60 * 60 * 1000,
                 ),
             },
             isInStock: true,

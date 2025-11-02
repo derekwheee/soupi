@@ -42,4 +42,6 @@ export enum SSEMessageType {
     USER_UPDATE = 'user_update',
 }
 
-export const EXPIRATION_WINDOW = 30; // days
+export const EXPIRATION_WINDOW_DAYS = !!process.env.EXPIRATION_WINDOW_DAYS
+    ? parseInt(process.env.EXPIRATION_WINDOW_DAYS, 10)
+    : 4; // days
