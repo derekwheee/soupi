@@ -1,12 +1,13 @@
 model Household {
-    id         Int         @id @default(autoincrement())
-    name       String
-    joinToken  String      @unique @default(uuid())
-    createdAt  DateTime    @default(now())
-    updatedAt  DateTime    @updatedAt
-    deletedAt  DateTime?
-    members    User[]
-    pantries   Pantry[]
-    recipes    Recipe[]
-    recipeTags RecipeTag[]
+  id         Int         @id @default(autoincrement())
+  name       String
+  joinToken  String      @unique @default(uuid())
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  deletedAt  DateTime?
+  members    User[]
+  pantries   Pantry[]
+  recipes    Recipe[]
+  recipeTags RecipeTag[]
+  Plan       Plan[]
 }

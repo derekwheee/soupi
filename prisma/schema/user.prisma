@@ -1,14 +1,14 @@
 model User {
-    id                 String    @id
-    clerkId            String    @unique
-    email              String?
-    name               String?
-    themePreference    String?   @default("system")
-    defaultHouseholdId Int?
-    createdAt          DateTime  @default(now())
-    updatedAt          DateTime  @updatedAt
-    deletedAt          DateTime?
+  id                 String    @id
+  clerkId            String    @unique
+  email              String?
+  name               String?
+  themePreference    String?   @default("system")
+  defaultHouseholdId Int?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
 
-    // Relations
-    households Household[]
+  // Relations
+  households Household[]
 }

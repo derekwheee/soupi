@@ -1,11 +1,11 @@
 model RecipeTag {
-    id        Int      @id @default(autoincrement())
-    name      String   @unique
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    // Relations
-    recipes     Recipe[]
-    householdId Int
-    household   Household @relation(fields: [householdId], references: [id])
+  // Relations
+  recipes     Recipe[]
+  householdId Int
+  household   Household @relation(fields: [householdId], references: [id])
 }

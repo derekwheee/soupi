@@ -1,0 +1,12 @@
+model PlanDay {
+  id        Int       @id @default(autoincrement())
+  date      DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  planId Int
+  plan   Plan @relation("PlanDays", fields: [planId], references: [id])
+
+  recipes Recipe[] @relation("PlanDayRecipes")
+}

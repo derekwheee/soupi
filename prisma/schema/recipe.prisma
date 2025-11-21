@@ -1,24 +1,25 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Recipe {
-    id           Int          @id @default(autoincrement())
-    name         String
-    prepTime     String?
-    cookTime     String?
-    servings     String?
-    instructions Json?
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime     @updatedAt
-    deletedAt    DateTime?
-    ingredients  Ingredient[]
-    tags         RecipeTag[]
-    household    Household   @relation(fields: [householdId], references: [id])
-    householdId  Int
+  id           Int          @id @default(autoincrement())
+  name         String
+  prepTime     String?
+  cookTime     String?
+  servings     String?
+  instructions Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+  ingredients  Ingredient[]
+  tags         RecipeTag[]
+  household    Household    @relation(fields: [householdId], references: [id])
+  householdId  Int
+  planDays     PlanDay[]    @relation("PlanDayRecipes")
 }

@@ -1,0 +1,11 @@
+model Plan {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  planDays PlanDay[] @relation("PlanDays")
+
+  householdId Int
+  household   Household @relation(fields: [householdId], references: [id])
+}
