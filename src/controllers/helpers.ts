@@ -1,19 +1,18 @@
 import { Household, Prisma } from '@prisma/client';
 import prisma from '../../prisma';
 import { Request, Response } from 'express';
-import { getAuth } from '@clerk/express'
+import { getAuth } from '@clerk/express';
 import he from 'he';
-import { has } from 'cheerio/dist/commonjs/api/traversing';
-
+import superjson from 'superjson';
 
 function decodeEntitiesDeep(value: any): any {
     if (typeof value === 'string') {
         return he.decode(value);
     } else if (Array.isArray(value)) {
         return value.map(decodeEntitiesDeep);
-    } else if (value && typeof value === 'object') {
+    } else if (value && typeof value === 'object' && !(value instanceof Date)) {
         return Object.fromEntries(
-            Object.entries(value).map(([k, v]) => [k, decodeEntitiesDeep(v)])
+            Object.entries(value).map(([k, v]) => [k, decodeEntitiesDeep(v)]),
         );
     }
     return value;
@@ -22,20 +21,20 @@ function decodeEntitiesDeep(value: any): any {
 async function hasAccessToHousehold(
     userId: string,
     householdId: number,
-    skipAccessCheck = false
+    skipAccessCheck = false,
 ): Promise<Household | null> {
     return await prisma.household.findFirst({
         where: {
             id: householdId,
-            ...(skipAccessCheck ? {} : { members: { some: { id: userId } } })
-        }
+            ...(skipAccessCheck ? {} : { members: { some: { id: userId } } }),
+        },
     });
 }
 
 export async function controller(
     req: Request,
     res: Response,
-    fn: Function
+    fn: Function,
 ): Promise<any> {
     try {
         const { userId } = getAuth(req);
@@ -43,16 +42,16 @@ export async function controller(
         const json = await fn(userId);
 
         if (typeof json !== 'object') {
-            return res.status(200).send(json)
+            return res.status(200).send(json);
         }
 
         res.json(decodeEntitiesDeep(json));
     } catch (error) {
         console.error(error);
         res.status(500).json(
-            error instanceof Error ?
-                { error: error.message } :
-                { error: 'An unknown error occurred' }
+            error instanceof Error
+                ? { error: error.message }
+                : { error: 'An unknown error occurred' },
         );
     }
 }
@@ -62,12 +61,11 @@ export async function householdController(
     res: Response,
     fn: Function,
     {
-        skipAccessCheck = false
-    } : {
-        skipAccessCheck?: boolean
-    } = {}
+        skipAccessCheck = false,
+    }: {
+        skipAccessCheck?: boolean;
+    } = {},
 ): Promise<void> {
-
     const householdId = Number(req.params.householdId);
 
     if (isNaN(householdId)) {
@@ -82,7 +80,11 @@ export async function householdController(
         return;
     }
 
-    const household = await hasAccessToHousehold(userId, householdId, skipAccessCheck);
+    const household = await hasAccessToHousehold(
+        userId,
+        householdId,
+        skipAccessCheck,
+    );
 
     if (!household) {
         res.status(403).json({ error: 'Access denied' });

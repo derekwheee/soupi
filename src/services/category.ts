@@ -29,7 +29,6 @@ export async function upsertCategory(
         SSEMessageType.CATEGORY_UPDATE,
         'upsertCategory',
         async () => {
-            console.log('upsertCategory called', householdId, pantryId, item);
             // Validate household access to pantryId
             const pantry = await prisma.pantry.findUniqueOrThrow({
                 where: { id: pantryId, householdId },

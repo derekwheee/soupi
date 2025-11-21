@@ -26,6 +26,7 @@
         "express": "5.1.0",
         "he": "^1.2.0",
         "puppeteer": "^24.25.0",
+        "superjson": "^2.2.5",
         "zod": "^4.1.12"
     },
     "devDependencies": {

@@ -50,7 +50,7 @@ RUN chmod +x python/parser.py python/scraper.py
 RUN npm run build
 COPY ./prisma/schema ./dist/prisma/schema
 
-RUN npm install -g prisma
+RUN npm install -g prisma@6
 RUN cd dist && prisma generate --no-engine
 
 # Railway uses PORT env variable

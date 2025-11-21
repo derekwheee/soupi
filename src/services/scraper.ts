@@ -1,5 +1,5 @@
 import puppeteer, { Page } from 'puppeteer';
-import { mistral } from '@ai-sdk/mistral';
+import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
@@ -33,6 +33,7 @@ export async function scrapeRecipe(
     url: string,
     { isRetry }: { isRetry?: boolean } = {},
 ): Promise<RecipeJSON | null> {
+    console.log(`Scraping recipe from URL: ${url}`);
     const browser = await puppeteer.launch({
         headless: true,
         args: [
@@ -61,8 +62,10 @@ export async function scrapeRecipe(
         return null;
     }
 
+    console.log({ textToParse });
+
     const parsed = await generateObject({
-        model: mistral('mistral-large-latest'),
+        model: openai('gpt-4o-mini'),
         schema: z.object({
             name: z.string(),
             prepTime: z.string().optional(),

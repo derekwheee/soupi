@@ -3,8 +3,9 @@ import prisma from '../../prisma';
 import { broadcast } from '../../utils/sse';
 import { SSEMessageType } from '../../utils/constants';
 
-export async function getPantries(householdId: number): Promise<Pantry[]> {
-    return prisma.pantry.findMany({
+export async function getPantries(householdId: number): Promise<Pantry> {
+    // TODO: Get user's default pantry
+    return prisma.pantry.findFirstOrThrow({
         where: { householdId },
         include: {
             pantryItems: {
@@ -71,11 +72,14 @@ export async function upsertPantryItem(
                 });
             }
 
-            return prisma.pantryItem.create({
+            const newItem = prisma.pantryItem.create({
                 data: {
                     ...data,
                 },
+                include: { category: true },
             });
+
+            return newItem;
         },
     );
 }
