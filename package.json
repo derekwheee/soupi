@@ -1,7 +1,7 @@
 {
     "private": true,
     "name": "soupi",
-    "version": "0.1.1",
+    "version": "1.0.0",
     "license": "MIT",
     "scripts": {
         "start": "ts-node src/server.ts",
@@ -14,7 +14,6 @@
         "#*": "./src/*"
     },
     "dependencies": {
-        "@ai-sdk/mistral": "^2.0.19",
         "@ai-sdk/openai": "^2.0.53",
         "@clerk/express": "^1.7.37",
         "@prisma/client": "6.9.0",
