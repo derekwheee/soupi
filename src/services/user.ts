@@ -3,6 +3,7 @@ import prisma from '../../prisma';
 import { User as ClerkUser } from '@clerk/express';
 import { DEFAULT_CATEGORIES, SSEMessageType } from '../../utils/constants';
 import { broadcast } from '../../utils/sse';
+import { createPlan } from './plan';
 
 export async function getById(id: string): Promise<User | null> {
     return prisma.user.findUnique({
@@ -37,6 +38,9 @@ export async function updateUser(
             return prisma.user.update({
                 where: { id },
                 data: patch,
+                include: {
+                    households: true,
+                },
             });
         },
     );
@@ -71,9 +75,14 @@ export async function createUser(user: ClerkUser): Promise<User> {
         const householdId = created.households?.[0]?.id;
         if (!householdId) return created;
 
+        await createPlan(householdId);
+
         const updated = await tx.user.update({
             where: { id: created.id },
             data: { defaultHouseholdId: householdId },
+            include: {
+                households: true,
+            },
         });
 
         return updated;
@@ -101,6 +110,7 @@ export async function sync(user: ClerkUser): Promise<User> {
                     email: user.emailAddresses[0]?.emailAddress || '',
                     name: user.fullName || '',
                 },
+                include: { households: true },
             });
         },
     );

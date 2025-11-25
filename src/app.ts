@@ -8,6 +8,7 @@ import shoppingListRoutes from './routes/shopping-list';
 import categoryRoutes from './routes/category';
 import metaRoutes from './routes/meta';
 import eventRoutes from './routes/events';
+import planRoutes from './routes/plan';
 import aiRoutes from './routes/ai';
 import { clerkMiddleware } from '@clerk/express'
 
@@ -24,6 +25,7 @@ app.use('/', recipeRoutes);
 app.use('/', pantryRoutes);
 app.use('/', shoppingListRoutes);
 app.use('/', categoryRoutes);
+app.use('/', planRoutes);
 app.use('/events', eventRoutes);
 app.use('/ai', aiRoutes);
 
