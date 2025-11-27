@@ -1,12 +1,10 @@
 import { Plan } from '@prisma/client';
 import prisma from '../../prisma';
 
-export async function createPlan(
-    householdId: number,
-): Promise<Plan> {
+export async function createPlan(householdId: number): Promise<Plan> {
     const plan = await prisma.plan.create({
         data: {
-            householdId,
+            household: { connect: { id: householdId } },
         },
     });
 
@@ -24,9 +22,7 @@ export async function createPlan(
     return plan;
 }
 
-export async function getPlan(
-    householdId: number,
-): Promise<Plan> {
+export async function getPlan(householdId: number): Promise<Plan> {
     return prisma.plan.findFirstOrThrow({
         where: {
             householdId,
@@ -41,13 +37,16 @@ export async function getPlan(
     });
 }
 
-export async function addPlanDay(householdId: number, {
-    planId,
-    date,
-}: {
-    planId: number,
-    date: Date,
-}): Promise<Plan> {
+export async function addPlanDay(
+    householdId: number,
+    {
+        planId,
+        date,
+    }: {
+        planId: number;
+        date: Date;
+    },
+): Promise<Plan> {
     return prisma.plan.update({
         where: { id: planId, householdId },
         data: {
@@ -63,9 +62,7 @@ export async function addPlanDay(householdId: number, {
     });
 }
 
-export async function removePlanDay(
-    planDayId: number,
-): Promise<void> {
+export async function removePlanDay(planDayId: number): Promise<void> {
     await prisma.planDay.update({
         where: { id: planDayId },
         data: {
@@ -78,8 +75,8 @@ export async function addRecipeToPlanDay({
     planDayId,
     recipeId,
 }: {
-    planDayId: number,
-    recipeId: number,
+    planDayId: number;
+    recipeId: number;
 }): Promise<void> {
     await prisma.planDay.update({
         where: { id: planDayId },
@@ -95,8 +92,8 @@ export async function removeRecipeFromPlanDay({
     planDayId,
     recipeId,
 }: {
-    planDayId: number,
-    recipeId: number,
+    planDayId: number;
+    recipeId: number;
 }): Promise<void> {
     await prisma.planDay.update({
         where: { id: planDayId },

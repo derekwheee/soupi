@@ -66,6 +66,15 @@ export async function createUser(user: ClerkUser): Promise<User> {
                                 },
                             },
                         },
+                        plans: {
+                            create: {
+                                planDays: {
+                                    create: {
+                                        date: null,
+                                    }
+                                }
+                            }
+                        }
                     },
                 },
             },
@@ -74,8 +83,6 @@ export async function createUser(user: ClerkUser): Promise<User> {
 
         const householdId = created.households?.[0]?.id;
         if (!householdId) return created;
-
-        await createPlan(householdId);
 
         const updated = await tx.user.update({
             where: { id: created.id },

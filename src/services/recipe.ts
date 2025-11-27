@@ -21,6 +21,7 @@ type RecipeUpsert = {
     servings?: string | null;
     instructions?: string[] | null;
     tags?: { id: number; name: string }[];
+    source?: string | null;
 };
 
 export async function getAllRecipes(
@@ -70,6 +71,7 @@ export async function createRecipeFromUrl(
         servings: recipeData.servings,
         instructions: recipeData.instructions,
         ingredients: recipeData.ingredients,
+        source: url,
     };
 
     return upsertRecipe(householdId, recipe);

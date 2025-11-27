@@ -10,6 +10,7 @@ export interface RecipeJSON {
     servings: string | null;
     ingredients: string[];
     instructions: string[];
+    source: string | null;
 }
 
 function cleanInstructions(recipeInstructions: any): string[] {
@@ -33,7 +34,6 @@ export async function scrapeRecipe(
     url: string,
     { isRetry }: { isRetry?: boolean } = {},
 ): Promise<RecipeJSON | null> {
-    console.log(`Scraping recipe from URL: ${url}`);
     const browser = await puppeteer.launch({
         headless: true,
         args: [
@@ -61,8 +61,6 @@ export async function scrapeRecipe(
     if (!textToParse) {
         return null;
     }
-
-    console.log({ textToParse });
 
     const parsed = await generateObject({
         model: openai('gpt-4o-mini'),
@@ -110,6 +108,7 @@ export async function scrapeRecipe(
               servings: recipe.servings || null,
               ingredients: recipe.ingredients || [],
               instructions: cleanInstructions(recipe.instructions) || [],
+              source: url,
           }
         : null;
 }

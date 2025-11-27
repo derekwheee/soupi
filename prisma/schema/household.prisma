@@ -9,5 +9,5 @@ model Household {
   pantries   Pantry[]
   recipes    Recipe[]
   recipeTags RecipeTag[]
-  Plan       Plan[]
+  plans      Plan[]
 }

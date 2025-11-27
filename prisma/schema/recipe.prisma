@@ -22,4 +22,5 @@ model Recipe {
   household    Household    @relation(fields: [householdId], references: [id])
   householdId  Int
   planDays     PlanDay[]    @relation("PlanDayRecipes")
+  source       String?
 }
