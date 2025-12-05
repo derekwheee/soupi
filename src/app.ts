@@ -1,3 +1,4 @@
+import path from 'path';
 import express from 'express';
 import cors from 'cors';
 import userRoutes from './routes/user';
@@ -10,13 +11,14 @@ import metaRoutes from './routes/meta';
 import eventRoutes from './routes/events';
 import planRoutes from './routes/plan';
 import aiRoutes from './routes/ai';
-import { clerkMiddleware } from '@clerk/express'
+import { clerkMiddleware } from '@clerk/express';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(clerkMiddleware({ debug: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/meta', metaRoutes);
 app.use('/user', userRoutes);

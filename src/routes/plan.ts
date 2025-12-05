@@ -4,7 +4,7 @@ import {
     getPlan,
     addPlanDay,
     removePlanDay,
-    addRecipeToPlanDay,
+    addRecipesToPlanDay,
     removeRecipeFromPlanDay,
 } from '../controllers/plan';
 
@@ -14,7 +14,7 @@ const prefix = '/household/:householdId/plan';
 router.get(prefix, getPlan);
 router.post(`${prefix}/day`, addPlanDay);
 router.delete(`${prefix}/day/:planDayId`, requireAuth(), removePlanDay);
-router.post(`${prefix}/day/:planDayId/recipe`, addRecipeToPlanDay);
-router.delete(`${prefix}/day/:planDayId/recipe/:recipeId`, requireAuth(), removeRecipeFromPlanDay);
+router.post(`${prefix}/day/:planDayId/recipes`, addRecipesToPlanDay);
+router.delete(`${prefix}/day/:planDayId/recipes/:recipeId`, requireAuth(), removeRecipeFromPlanDay);
 
 export default router;

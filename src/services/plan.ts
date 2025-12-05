@@ -31,7 +31,13 @@ export async function getPlan(householdId: number): Promise<Plan> {
         include: {
             planDays: {
                 where: { deletedAt: null },
-                include: { recipes: true },
+                include: {
+                    recipes: {
+                        include: {
+                            ingredients: true,
+                        },
+                    },
+                },
             },
         },
     });
@@ -57,7 +63,10 @@ export async function addPlanDay(
             },
         },
         include: {
-            planDays: true,
+            planDays: {
+                where: { deletedAt: null },
+                include: { recipes: true },
+            },
         },
     });
 }
@@ -71,18 +80,18 @@ export async function removePlanDay(planDayId: number): Promise<void> {
     });
 }
 
-export async function addRecipeToPlanDay({
+export async function addRecipesToPlanDay({
     planDayId,
-    recipeId,
+    recipeIds,
 }: {
     planDayId: number;
-    recipeId: number;
+    recipeIds: number[];
 }): Promise<void> {
     await prisma.planDay.update({
         where: { id: planDayId },
         data: {
             recipes: {
-                connect: { id: recipeId },
+                connect: recipeIds.map((id) => ({ id })),
             },
         },
     });

@@ -22,9 +22,12 @@ export async function removePlanDay(req: Request, res: Response) {
     );
 }
 
-export async function addRecipeToPlanDay(req: Request, res: Response) {
+export async function addRecipesToPlanDay(req: Request, res: Response) {
     return await householdController(req, res, () =>
-        planService.addRecipeToPlanDay(req.body),
+        planService.addRecipesToPlanDay({
+            planDayId: Number(req.params.planDayId),
+            recipeIds: req.body,
+        }),
     );
 }
 
