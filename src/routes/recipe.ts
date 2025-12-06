@@ -6,6 +6,7 @@ import {
     upsertRecipe,
     deleteRecipe,
     getAllRecipeTags,
+    completeRecipe,
 } from '../controllers/recipe';
 import { scrapeRecipe, RecipeJSON } from '../services/scraper';
 import requireAuth from '../middleware/require-auth';
@@ -39,5 +40,6 @@ router.get(
 
 router.get(`${prefix}/:id`, requireAuth(), getRecipe);
 router.delete(`${prefix}/:id`, requireAuth(), deleteRecipe);
+router.post(`${prefix}/:id/made`, requireAuth(), completeRecipe);
 
 export default router;

@@ -1,14 +1,15 @@
 {
     "private": true,
     "name": "soupi",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "license": "MIT",
     "scripts": {
         "start": "ts-node src/server.ts",
         "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
         "dist": "node src/server.js",
         "build": "tsc -p tsconfig.json",
-        "docker:rebuild": "tsc -p tsconfig.json && docker rm -f soupi || true && docker build -t soupi . && docker run -d -p 8080:8080 --env-file .env-docker --name soupi soupi"
+        "docker:rebuild": "tsc -p tsconfig.json && docker rm -f soupi || true && docker build -t soupi . && docker run -d -p 8080:8080 --env-file .env-docker --name soupi soupi",
+        "migrate": "prisma migrate deploy"
     },
     "imports": {
         "#*": "./src/*"

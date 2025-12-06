@@ -23,4 +23,7 @@ model Recipe {
   householdId  Int
   planDays     PlanDay[]    @relation("PlanDayRecipes")
   source       String?
+  rating       Int          @default(0)
+  timesMade    Int          @default(0)
+  lastMade     DateTime?
 }

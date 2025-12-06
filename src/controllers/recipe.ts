@@ -56,3 +56,9 @@ export async function getAllRecipeTags(req: Request, res: Response) {
         recipeService.getAllRecipeTags(household.id),
     );
 }
+
+export async function completeRecipe(req: Request, res: Response) {
+    return await householdController(req, res, (household: Household) =>
+        recipeService.completeRecipe(household.id, req.body),
+    );
+}

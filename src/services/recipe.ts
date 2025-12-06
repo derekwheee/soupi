@@ -24,6 +24,12 @@ type RecipeUpsert = {
     source?: string | null;
 };
 
+type RecipeCompletion = {
+    recipeId: number;
+    rating?: number;
+    finishedPantryItems?: number[];
+};
+
 export async function getAllRecipes(
     householdId: number,
 ): Promise<RecipeWithJoins[]> {
@@ -144,6 +150,42 @@ export async function getAllRecipeTags(householdId: number) {
     return prisma.recipeTag.findMany({
         where: { recipes: { every: { householdId } } },
         orderBy: { name: 'asc' },
+    });
+}
+
+export async function completeRecipe(
+    householdId: number,
+    completion: RecipeCompletion,
+): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+        
+        const recipe = await tx.recipe.findFirstOrThrow({
+            where: { id: completion.recipeId, householdId },
+        });
+
+        await tx.recipe.update({
+            where: { id: completion.recipeId, householdId },
+            data: {
+                rating: completion.rating || recipe.rating,
+                timesMade: { increment: 1 },
+                lastMade: new Date(),
+            },
+        });
+
+        const items = await tx.pantryItem.findMany({
+            where: { id: { in: completion.finishedPantryItems } },
+            select: { id: true, isFavorite: true },
+        });
+
+        for (const item of items) {
+            await tx.pantryItem.update({
+                where: { id: item.id },
+                data: {
+                    isInStock: false,
+                    isInShoppingList: item.isFavorite ? true : false,
+                },
+            });
+        }
     });
 }
 

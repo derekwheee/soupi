@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Recipe" ADD COLUMN     "lastMade" TIMESTAMP(3),
+ADD COLUMN     "rating" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "timesMade" INTEGER NOT NULL DEFAULT 0;
