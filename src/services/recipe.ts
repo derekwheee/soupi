@@ -158,13 +158,12 @@ export async function completeRecipe(
     completion: RecipeCompletion,
 ): Promise<void> {
     await prisma.$transaction(async (tx) => {
-        
         const recipe = await tx.recipe.findFirstOrThrow({
             where: { id: completion.recipeId, householdId },
         });
 
         await tx.recipe.update({
-            where: { id: completion.recipeId, householdId },
+            where: { id: completion.recipeId },
             data: {
                 rating: completion.rating || recipe.rating,
                 timesMade: { increment: 1 },
@@ -183,6 +182,24 @@ export async function completeRecipe(
                 data: {
                     isInStock: false,
                     isInShoppingList: item.isFavorite ? true : false,
+                },
+            });
+        }
+
+        const planned = await tx.planDay.findMany({
+            where: {
+                recipes: { some: { id: completion.recipeId } },
+            },
+            select: { id: true },
+        });
+
+        for (const pd of planned) {
+            await tx.planDay.update({
+                where: { id: pd.id },
+                data: {
+                    recipes: {
+                        disconnect: { id: completion.recipeId },
+                    },
                 },
             });
         }
