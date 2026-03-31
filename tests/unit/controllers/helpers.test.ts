@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
+import { prismaMock } from '../../mocks/prisma';
+
+vi.mock('../../../prisma', () => ({ default: prismaMock }));
+
 import { parseBody } from '../../../src/controllers/helpers';
 
 function mockRes() {
