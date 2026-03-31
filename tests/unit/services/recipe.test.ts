@@ -1,16 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { prismaMock } from '../../mocks/prisma';
-import '../../mocks/broadcast';
+import { describe, expect, it, vi } from 'vitest';
+
 import { mockRecipe, mockRecipe2 } from '../../fixtures/recipe';
+import '../../mocks/broadcast';
+import { prismaMock } from '../../mocks/prisma';
 
 vi.mock('../../../prisma/index', () => ({ default: prismaMock }));
 vi.mock('../../../utils/sse', () => ({
-    broadcast: vi.fn(async (_hid: number, _type: unknown, _from: string, cb: () => Promise<unknown>) => cb()),
     addClient: vi.fn(),
+    broadcast: vi.fn(async (_hid: number, _type: unknown, _from: string, cb: () => Promise<unknown>) => cb()),
 }));
 
 // Import after mocks are set up
-const { getAllRecipes, getRecipe, deleteRecipe, completeRecipe } = await import('../../../src/services/recipe');
+const { completeRecipe, deleteRecipe, getAllRecipes, getRecipe } = await import('../../../src/services/recipe');
 
 describe('getAllRecipes()', () => {
     it('returns paginated recipes with default page/limit', async () => {
@@ -20,9 +21,9 @@ describe('getAllRecipes()', () => {
 
         expect(prismaMock.recipe.findMany).toHaveBeenCalledWith(
             expect.objectContaining({
-                where: { householdId: 1, deletedAt: null },
                 skip: 0,
                 take: 50,
+                where: { deletedAt: null, householdId: 1 },
             }),
         );
         expect(results).toHaveLength(2);
@@ -31,7 +32,7 @@ describe('getAllRecipes()', () => {
     it('applies custom page and limit', async () => {
         prismaMock.recipe.findMany.mockResolvedValue([mockRecipe]);
 
-        await getAllRecipes(1, { page: 2, limit: 10 });
+        await getAllRecipes(1, { limit: 10, page: 2 });
 
         expect(prismaMock.recipe.findMany).toHaveBeenCalledWith(
             expect.objectContaining({ skip: 10, take: 10 }),
@@ -45,7 +46,7 @@ describe('getAllRecipes()', () => {
 
         expect(prismaMock.recipe.findMany).toHaveBeenCalledWith(
             expect.objectContaining({
-                where: { householdId: 42, deletedAt: null },
+                where: { deletedAt: null, householdId: 42 },
             }),
         );
     });
@@ -58,7 +59,7 @@ describe('getRecipe()', () => {
         const result = await getRecipe(1, 1);
 
         expect(prismaMock.recipe.findUniqueOrThrow).toHaveBeenCalledWith(
-            expect.objectContaining({ where: { id: 1, householdId: 1 } }),
+            expect.objectContaining({ where: { householdId: 1, id: 1 } }),
         );
         expect(result.id).toBe(1);
     });
@@ -78,8 +79,8 @@ describe('deleteRecipe()', () => {
 
         expect(prismaMock.recipe.update).toHaveBeenCalledWith(
             expect.objectContaining({
-                where: { id: 1, householdId: 1 },
                 data: expect.objectContaining({ deletedAt: expect.any(Date) }),
+                where: { householdId: 1, id: 1 },
             }),
         );
     });
@@ -94,13 +95,13 @@ describe('completeRecipe()', () => {
         prismaMock.pantryItem.findMany.mockResolvedValue([]);
         prismaMock.planDay.findMany.mockResolvedValue([]);
 
-        await completeRecipe(1, { recipeId: 1, rating: 4 });
+        await completeRecipe(1, { rating: 4, recipeId: 1 });
 
         expect(prismaMock.recipe.update).toHaveBeenCalledWith(
             expect.objectContaining({
                 data: expect.objectContaining({
-                    timesMade: { increment: 1 },
                     lastMade: expect.any(Date),
+                    timesMade: { increment: 1 },
                 }),
             }),
         );
@@ -114,12 +115,12 @@ describe('completeRecipe()', () => {
         prismaMock.pantryItem.update.mockResolvedValue({} as any);
         prismaMock.planDay.findMany.mockResolvedValue([]);
 
-        await completeRecipe(1, { recipeId: 1, finishedPantryItems: [10] });
+        await completeRecipe(1, { finishedPantryItems: [10], recipeId: 1 });
 
         expect(prismaMock.pantryItem.update).toHaveBeenCalledWith(
             expect.objectContaining({
-                where: { id: 10 },
                 data: expect.objectContaining({ isInStock: false }),
+                where: { id: 10 },
             }),
         );
     });
@@ -132,7 +133,7 @@ describe('completeRecipe()', () => {
         prismaMock.pantryItem.update.mockResolvedValue({} as any);
         prismaMock.planDay.findMany.mockResolvedValue([]);
 
-        await completeRecipe(1, { recipeId: 1, finishedPantryItems: [10] });
+        await completeRecipe(1, { finishedPantryItems: [10], recipeId: 1 });
 
         expect(prismaMock.pantryItem.update).toHaveBeenCalledWith(
             expect.objectContaining({

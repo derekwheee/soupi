@@ -8,6 +8,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "dist": "node src/server.js",
     "build": "tsc -p tsconfig.json",
+    "lint": "eslint .",
     "docker:rebuild": "tsc -p tsconfig.json && docker rm -f soupi || true && docker build -t soupi . && docker run -d -p 8080:8080 --env-file .env-docker --name soupi soupi",
     "migrate": "prisma migrate deploy",
     "test": "vitest run",

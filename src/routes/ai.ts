@@ -1,12 +1,13 @@
-import requireAuth from '../middleware/require-auth';
 import { Router } from 'express';
+
+import requireAuth from '../middleware/require-auth';
 import { getExpiringPantryItems, getRecipeSuggestions } from '../services/ai';
 
 const router = Router();
 
 router.get('/suggestions/:pantryId', requireAuth(), async (req, res) => {
     const pantryId = parseInt(req.params.pantryId);
-    const { tags, keywords }: { tags?: string; keywords?: string } = req.query;
+    const { keywords, tags }: { keywords?: string; tags?: string; } = req.query;
 
     const suggestions = await getRecipeSuggestions(pantryId, tags, keywords);
     return res.json(suggestions);

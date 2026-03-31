@@ -1,12 +1,13 @@
-import requireAuth from '../middleware/require-auth';
 import { Router } from 'express';
+
 import {
-    getPlan,
     addPlanDay,
-    removePlanDay,
     addRecipesToPlanDay,
+    getPlan,
+    removePlanDay,
     removeRecipeFromPlanDay,
 } from '../controllers/plan';
+import requireAuth from '../middleware/require-auth';
 
 const router = Router();
 const prefix = '/household/:householdId/plan';

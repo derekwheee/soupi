@@ -1,21 +1,22 @@
 import type { Plan, PlanDay } from '@prisma/client';
+
 import { mockRecipe } from './recipe';
 
 export const mockPlanDay: PlanDay & { recipes: typeof mockRecipe[] } = {
-    id: 1,
-    date: new Date('2024-06-01'),
-    planId: 1,
     createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
+    date: new Date('2024-06-01'),
     deletedAt: null,
+    id: 1,
+    planId: 1,
     recipes: [mockRecipe],
+    updatedAt: new Date('2024-01-01'),
 };
 
 export const mockPlan: Plan & { planDays: typeof mockPlanDay[] } = {
-    id: 1,
-    householdId: 1,
     createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
     deletedAt: null,
+    householdId: 1,
+    id: 1,
     planDays: [mockPlanDay],
+    updatedAt: new Date('2024-01-01'),
 };

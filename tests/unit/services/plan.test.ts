@@ -1,10 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
-import { prismaMock } from '../../mocks/prisma';
+import { describe, expect, it, vi } from 'vitest';
+
 import { mockPlan, mockPlanDay } from '../../fixtures/plan';
+import { prismaMock } from '../../mocks/prisma';
 
 vi.mock('../../../prisma/index', () => ({ default: prismaMock }));
 
-const { createPlan, getPlan, addPlanDay, removePlanDay, addRecipesToPlanDay } = await import('../../../src/services/plan');
+const { addPlanDay, addRecipesToPlanDay, createPlan, getPlan, removePlanDay } = await import('../../../src/services/plan');
 
 describe('createPlan()', () => {
     it('creates plan and planDay atomically in a transaction', async () => {
@@ -37,8 +38,8 @@ describe('getPlan()', () => {
 
         expect(prismaMock.plan.findFirstOrThrow).toHaveBeenCalledWith(
             expect.objectContaining({
-                where: { householdId: 1, deletedAt: null },
                 include: expect.objectContaining({ planDays: expect.any(Object) }),
+                where: { deletedAt: null, householdId: 1 },
             }),
         );
         expect(result.id).toBe(mockPlan.id);
@@ -57,12 +58,12 @@ describe('addPlanDay()', () => {
         prismaMock.plan.update.mockResolvedValue(updatedPlan as any);
 
         const date = new Date('2024-07-01');
-        const result = await addPlanDay(1, { planId: 1, date });
+        await addPlanDay(1, { date, planId: 1 });
 
         expect(prismaMock.plan.update).toHaveBeenCalledWith(
             expect.objectContaining({
-                where: { id: 1, householdId: 1 },
                 data: { planDays: { create: { date } } },
+                where: { householdId: 1, id: 1 },
             }),
         );
     });
@@ -76,8 +77,8 @@ describe('removePlanDay()', () => {
 
         expect(prismaMock.planDay.update).toHaveBeenCalledWith(
             expect.objectContaining({
-                where: { id: 1 },
                 data: { deletedAt: expect.any(Date) },
+                where: { id: 1 },
             }),
         );
     });
@@ -90,12 +91,12 @@ describe('addRecipesToPlanDay()', () => {
         await addRecipesToPlanDay({ planDayId: 1, recipeIds: [10, 11] });
 
         expect(prismaMock.planDay.update).toHaveBeenCalledWith({
-            where: { id: 1 },
             data: {
                 recipes: {
                     connect: [{ id: 10 }, { id: 11 }],
                 },
             },
+            where: { id: 1 },
         });
     });
 });

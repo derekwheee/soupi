@@ -1,6 +1,7 @@
-import requireAuth from '../middleware/require-auth';
 import { Router } from 'express';
+
 import { addClient } from '../../utils/sse';
+import requireAuth from '../middleware/require-auth';
 
 const router = Router();
 

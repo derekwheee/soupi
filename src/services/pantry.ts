@@ -1,35 +1,36 @@
-import { Pantry, PantryItem, Prisma } from '@prisma/client';
-import prisma from '../../prisma';
-import { broadcast } from '../../utils/sse';
-import { SSEMessageType } from '../../utils/constants';
+import { Pantry, PantryItem } from '@prisma/client';
 
-type PantryItemInput = Partial<Omit<PantryItem, 'createdAt' | 'updatedAt' | 'deletedAt'>> & {
+import prisma from '../../prisma';
+import { SSEMessageType } from '../../utils/constants';
+import { broadcast } from '../../utils/sse';
+
+type PantryItemInput = Partial<Omit<PantryItem, 'createdAt' | 'deletedAt' | 'updatedAt'>> & {
     name: string;
     pantryId: number;
 };
-
-export async function getPantries(householdId: number): Promise<Pantry> {
-    // TODO: Get user's default pantry
-    return prisma.pantry.findFirstOrThrow({
-        where: { householdId },
-        include: {
-            pantryItems: {
-                where: { deletedAt: null },
-                orderBy: { id: 'asc' },
-                include: { category: true },
-            },
-            itemCategories: { orderBy: { sortOrder: 'asc' } },
-        },
-    });
-}
 
 export async function getAllPantryItems(
     householdId: number,
     pantryId: number,
 ): Promise<PantryItem[]> {
     return prisma.pantryItem.findMany({
-        where: { pantryId, pantry: { householdId }, deletedAt: null },
         include: { category: true },
+        where: { deletedAt: null, pantry: { householdId }, pantryId },
+    });
+}
+
+export async function getPantries(householdId: number): Promise<Pantry> {
+    // TODO: Get user's default pantry
+    return prisma.pantry.findFirstOrThrow({
+        include: {
+            itemCategories: { orderBy: { sortOrder: 'asc' } },
+            pantryItems: {
+                include: { category: true },
+                orderBy: { id: 'asc' },
+                where: { deletedAt: null },
+            },
+        },
+        where: { householdId },
     });
 }
 
@@ -39,8 +40,8 @@ export async function getPantryItem(
     itemId: number,
 ): Promise<PantryItem> {
     return prisma.pantryItem.findUniqueOrThrow({
-        where: { id: itemId, pantryId, pantry: { householdId } },
         include: { category: true },
+        where: { id: itemId, pantry: { householdId }, pantryId },
     });
 }
 
@@ -55,7 +56,7 @@ export async function upsertPantryItem(
         async () => {
             // Validate household access to pantryId
             const pantry = await prisma.pantry.findUniqueOrThrow({
-                where: { id: item.pantryId, householdId },
+                where: { householdId, id: item.pantryId },
             });
 
             if (!pantry) {
@@ -72,8 +73,8 @@ export async function upsertPantryItem(
 
             if (existing) {
                 return prisma.pantryItem.update({
-                    where: { id: existing.id },
                     data,
+                    where: { id: existing.id },
                 });
             }
 

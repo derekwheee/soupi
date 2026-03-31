@@ -1,8 +1,9 @@
+import { clerkClient, getAuth } from '@clerk/express'
 import { Request, Response } from 'express';
+
+import { UpdateUserSchema } from '../schemas';
 import * as userService from '../services/user';
 import { controller, parseBody } from './helpers';
-import { clerkClient, getAuth } from '@clerk/express'
-import { UpdateUserSchema } from '../schemas';
 
 export async function getUser(req: Request, res: Response) {
     const { userId } = getAuth(req);
@@ -12,6 +13,18 @@ export async function getUser(req: Request, res: Response) {
     }
 
     return await controller(req, res, () => userService.getById(userId));
+}
+
+export async function syncUser(req: Request, res: Response) {
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const user = await clerkClient.users.getUser(userId)
+
+    return await controller(req, res, () => userService.sync(user));
 }
 
 export async function updateUser(req: Request, res: Response) {
@@ -27,16 +40,4 @@ export async function updateUser(req: Request, res: Response) {
     return await controller(req, res, () =>
         userService.updateUser(userId, body),
     );
-}
-
-export async function syncUser(req: Request, res: Response) {
-    const { userId } = getAuth(req);
-
-    if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const user = await clerkClient.users.getUser(userId)
-
-    return await controller(req, res, () => userService.sync(user));
 }

@@ -2,8 +2,9 @@ export {};
 
 declare global {
     interface BroadcastMessage {
-        type: SSEMessageType;
-        from: string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data: any;
+        from: string;
+        type: SSEMessageType;
     }
 }

@@ -1,17 +1,94 @@
-import { User } from '@prisma/client';
-import prisma from '../../prisma';
 import { User as ClerkUser } from '@clerk/express';
+import { User } from '@prisma/client';
+
+import prisma from '../../prisma';
 import { DEFAULT_CATEGORIES, SSEMessageType } from '../../utils/constants';
 import { broadcast } from '../../utils/sse';
-import { createPlan } from './plan';
 
-export async function getById(id: string): Promise<User | null> {
+export async function createUser(user: ClerkUser): Promise<User> {
+    return prisma.$transaction(async (tx) => {
+        const created = await tx.user.create({
+            data: {
+                clerkId: user.id,
+                email: user.emailAddresses?.[0]?.emailAddress || '',
+                households: {
+                    create: {
+                        name: 'My Household',
+                        pantries: {
+                            create: {
+                                isDefault: true,
+                                itemCategories: {
+                                    create: DEFAULT_CATEGORIES,
+                                },
+                                name: 'My Pantry',
+                            },
+                        },
+                        plans: {
+                            create: {
+                                planDays: {
+                                    create: {
+                                        date: null,
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+                id: user.id,
+                name: user.fullName || '',
+            },
+            include: { households: true },
+        });
+
+        const householdId = created.households?.[0]?.id;
+        if (!householdId) return created;
+
+        const updated = await tx.user.update({
+            data: { defaultHouseholdId: householdId },
+            include: {
+                households: true,
+            },
+            where: { id: created.id },
+        });
+
+        return updated;
+    });
+}
+
+export async function getById(id: string): Promise<null | User> {
     return prisma.user.findUnique({
-        where: { id },
         include: {
             households: true,
         },
+        where: { id },
     });
+}
+
+export async function sync(user: ClerkUser): Promise<User> {
+    const existing = await prisma.user.findUnique({
+        where: { clerkId: user.id },
+    });
+
+    if (!existing) {
+        return await createUser(user);
+    }
+
+    return await broadcast(
+        existing.defaultHouseholdId!,
+        SSEMessageType.USER_UPDATE,
+        'syncUser',
+        async () => {
+            return await prisma.user.update({
+                data: {
+                    clerkId: user.id,
+                    email: user.emailAddresses[0]?.emailAddress || '',
+                    name: user.fullName || '',
+                },
+                include: { households: true },
+                where: { id: existing.id },
+            });
+        },
+    );
 }
 
 export async function updateUser(
@@ -36,88 +113,11 @@ export async function updateUser(
             }
 
             return prisma.user.update({
-                where: { id },
                 data: patch,
                 include: {
                     households: true,
                 },
-            });
-        },
-    );
-}
-
-export async function createUser(user: ClerkUser): Promise<User> {
-    return prisma.$transaction(async (tx) => {
-        const created = await tx.user.create({
-            data: {
-                id: user.id,
-                clerkId: user.id,
-                email: user.emailAddresses?.[0]?.emailAddress || '',
-                name: user.fullName || '',
-                households: {
-                    create: {
-                        name: 'My Household',
-                        pantries: {
-                            create: {
-                                name: 'My Pantry',
-                                isDefault: true,
-                                itemCategories: {
-                                    create: DEFAULT_CATEGORIES,
-                                },
-                            },
-                        },
-                        plans: {
-                            create: {
-                                planDays: {
-                                    create: {
-                                        date: null,
-                                    }
-                                }
-                            }
-                        }
-                    },
-                },
-            },
-            include: { households: true },
-        });
-
-        const householdId = created.households?.[0]?.id;
-        if (!householdId) return created;
-
-        const updated = await tx.user.update({
-            where: { id: created.id },
-            data: { defaultHouseholdId: householdId },
-            include: {
-                households: true,
-            },
-        });
-
-        return updated;
-    });
-}
-
-export async function sync(user: ClerkUser): Promise<User> {
-    const existing = await prisma.user.findUnique({
-        where: { clerkId: user.id },
-    });
-
-    if (!existing) {
-        return await createUser(user);
-    }
-
-    return await broadcast(
-        existing.defaultHouseholdId!,
-        SSEMessageType.USER_UPDATE,
-        'syncUser',
-        async () => {
-            return await prisma.user.update({
-                where: { id: existing.id },
-                data: {
-                    clerkId: user.id,
-                    email: user.emailAddresses[0]?.emailAddress || '',
-                    name: user.fullName || '',
-                },
-                include: { households: true },
+                where: { id },
             });
         },
     );

@@ -1,40 +1,40 @@
-import type { Pantry, PantryItem, ItemCategory } from '@prisma/client';
+import type { ItemCategory, Pantry, PantryItem } from '@prisma/client';
 
 export const mockCategory: ItemCategory = {
-    id: 1,
-    name: 'Produce',
-    icon: '🥦',
-    sortOrder: 0,
-    isNonFood: false,
-    pantryId: 1,
     createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
     deletedAt: null,
+    icon: '🥦',
+    id: 1,
+    isNonFood: false,
+    name: 'Produce',
+    pantryId: 1,
+    sortOrder: 0,
+    updatedAt: new Date('2024-01-01'),
 };
 
 export const mockPantryItem: PantryItem = {
+    categoryId: 1,
+    createdAt: new Date('2024-01-01'),
+    deletedAt: null,
+    expiresAt: null,
     id: 1,
-    name: 'Flour',
-    isInStock: true,
     isFavorite: false,
     isInShoppingList: false,
-    purchasedAt: new Date('2024-01-01'),
-    expiresAt: null,
-    categoryId: 1,
+    isInStock: true,
+    name: 'Flour',
     pantryId: 1,
-    createdAt: new Date('2024-01-01'),
+    purchasedAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
-    deletedAt: null,
 };
 
-export const mockPantry: Pantry & { pantryItems: PantryItem[]; itemCategories: ItemCategory[] } = {
-    id: 1,
-    name: 'My Pantry',
-    isDefault: true,
-    householdId: 1,
+export const mockPantry: Pantry & { itemCategories: ItemCategory[]; pantryItems: PantryItem[]; } = {
     createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
     deletedAt: null,
-    pantryItems: [mockPantryItem],
+    householdId: 1,
+    id: 1,
+    isDefault: true,
     itemCategories: [mockCategory],
+    name: 'My Pantry',
+    pantryItems: [mockPantryItem],
+    updatedAt: new Date('2024-01-01'),
 };

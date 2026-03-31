@@ -1,11 +1,12 @@
-import requireAuth from '../middleware/require-auth';
 import { Router } from 'express';
+
 import {
-    getPantries,
     getAllPantryItems,
+    getPantries,
     getPantryItem,
     upsertPantryItem,
 } from '../controllers/pantry';
+import requireAuth from '../middleware/require-auth';
 
 const router = Router();
 const prefix = '/household/:householdId/pantry';

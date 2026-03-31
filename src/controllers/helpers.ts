@@ -1,58 +1,18 @@
-import { Household, Prisma } from '@prisma/client';
-import prisma from '../../prisma';
-import { Request, Response } from 'express';
 import { getAuth } from '@clerk/express';
+import { Household } from '@prisma/client';
+import { Request, Response } from 'express';
 import he from 'he';
-import superjson from 'superjson';
 import { z } from 'zod';
+
+import prisma from '../../prisma';
 import logger from '../../utils/logger';
-
-function decodeEntitiesDeep(value: any): any {
-    if (typeof value === 'string') {
-        return he.decode(value);
-    } else if (Array.isArray(value)) {
-        return value.map(decodeEntitiesDeep);
-    } else if (value && typeof value === 'object' && !(value instanceof Date)) {
-        return Object.fromEntries(
-            Object.entries(value).map(([k, v]) => [k, decodeEntitiesDeep(v)]),
-        );
-    }
-    return value;
-}
-
-export function parseBody<T>(
-    res: Response,
-    schema: z.ZodType<T>,
-    body: unknown,
-): T | null {
-    const result = schema.safeParse(body);
-    if (!result.success) {
-        res.status(400).json({
-            error: 'Invalid request body',
-            details: result.error.flatten(),
-        });
-        return null;
-    }
-    return result.data;
-}
-
-async function hasAccessToHousehold(
-    userId: string,
-    householdId: number,
-    skipAccessCheck = false,
-): Promise<Household | null> {
-    return await prisma.household.findFirst({
-        where: {
-            id: householdId,
-            ...(skipAccessCheck ? {} : { members: { some: { id: userId } } }),
-        },
-    });
-}
 
 export async function controller(
     req: Request,
     res: Response,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     fn: Function,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
     try {
         const { userId } = getAuth(req);
@@ -77,6 +37,7 @@ export async function controller(
 export async function householdController(
     req: Request,
     res: Response,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     fn: Function,
     {
         skipAccessCheck = false,
@@ -110,4 +71,47 @@ export async function householdController(
     }
 
     return await controller(req, res, () => fn(household));
+}
+
+export function parseBody<T>(
+    res: Response,
+    schema: z.ZodType<T>,
+    body: unknown,
+): null | T {
+    const result = schema.safeParse(body);
+    if (!result.success) {
+        res.status(400).json({
+            details: result.error.flatten(),
+            error: 'Invalid request body',
+        });
+        return null;
+    }
+    return result.data;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function decodeEntitiesDeep(value: any): any {
+    if (typeof value === 'string') {
+        return he.decode(value);
+    } else if (Array.isArray(value)) {
+        return value.map(decodeEntitiesDeep);
+    } else if (value && typeof value === 'object' && !(value instanceof Date)) {
+        return Object.fromEntries(
+            Object.entries(value).map(([k, v]) => [k, decodeEntitiesDeep(v)]),
+        );
+    }
+    return value;
+}
+
+async function hasAccessToHousehold(
+    userId: string,
+    householdId: number,
+    skipAccessCheck = false,
+): Promise<Household | null> {
+    return await prisma.household.findFirst({
+        where: {
+            id: householdId,
+            ...(skipAccessCheck ? {} : { members: { some: { id: userId } } }),
+        },
+    });
 }

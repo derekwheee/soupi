@@ -1,14 +1,15 @@
-import { describe, it, expect, vi } from 'vitest';
-import { prismaMock } from '../../mocks/prisma';
+import { describe, expect, it, vi } from 'vitest';
+
 import { mockPantry, mockPantryItem } from '../../fixtures/pantry';
+import { prismaMock } from '../../mocks/prisma';
 
 vi.mock('../../../prisma/index', () => ({ default: prismaMock }));
 vi.mock('../../../utils/sse', () => ({
-    broadcast: vi.fn(async (_hid: number, _type: unknown, _from: string, cb: () => Promise<unknown>) => cb()),
     addClient: vi.fn(),
+    broadcast: vi.fn(async (_hid: number, _type: unknown, _from: string, cb: () => Promise<unknown>) => cb()),
 }));
 
-const { getPantries, getAllPantryItems, upsertPantryItem } = await import('../../../src/services/pantry');
+const { getAllPantryItems, getPantries, upsertPantryItem } = await import('../../../src/services/pantry');
 
 describe('getPantries()', () => {
     it('returns the first pantry for the household', async () => {
@@ -37,7 +38,7 @@ describe('getAllPantryItems()', () => {
 
         expect(prismaMock.pantryItem.findMany).toHaveBeenCalledWith(
             expect.objectContaining({
-                where: { pantryId: 1, pantry: { householdId: 1 }, deletedAt: null },
+                where: { deletedAt: null, pantry: { householdId: 1 }, pantryId: 1 },
             }),
         );
         expect(items).toHaveLength(1);
@@ -63,7 +64,7 @@ describe('upsertPantryItem()', () => {
         prismaMock.pantryItem.findFirst.mockResolvedValue(mockPantryItem);
         prismaMock.pantryItem.update.mockResolvedValue({ ...mockPantryItem, isInStock: false });
 
-        const result = await upsertPantryItem(1, { ...baseItem, isInStock: false });
+        await upsertPantryItem(1, { ...baseItem, isInStock: false });
 
         expect(prismaMock.pantryItem.update).toHaveBeenCalledWith(
             expect.objectContaining({ where: { id: mockPantryItem.id } }),
@@ -75,7 +76,7 @@ describe('upsertPantryItem()', () => {
         prismaMock.pantryItem.findFirst.mockResolvedValue(mockPantryItem);
         prismaMock.pantryItem.update.mockResolvedValue({ ...mockPantryItem, isFavorite: true });
 
-        await upsertPantryItem(1, { id: 1, name: 'Flour', pantryId: 1, isFavorite: true });
+        await upsertPantryItem(1, { id: 1, isFavorite: true, name: 'Flour', pantryId: 1 });
 
         expect(prismaMock.pantryItem.update).toHaveBeenCalled();
     });

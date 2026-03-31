@@ -12,13 +12,13 @@ export const DEFAULT_CATEGORIES = [
     { icon: '🧃', name: 'Beverages', sortOrder: 10 },
     { icon: '🥛', name: 'Dairy', sortOrder: 11 },
     { icon: '🍦', name: 'Frozen', sortOrder: 12 },
-    { icon: '🍼', name: 'Baby & Kids', sortOrder: 13, isNonFood: true },
-    { icon: '🐾', name: 'Pet Supplies', sortOrder: 14, isNonFood: true },
-    { icon: '🧼', name: 'Cleaning Supplies', sortOrder: 15, isNonFood: true },
-    { icon: '🧴', name: 'Household', sortOrder: 16, isNonFood: true },
-    { icon: '🪥', name: 'Personal Care', sortOrder: 17, isNonFood: true },
-    { icon: '💊', name: 'Health', sortOrder: 18, isNonFood: true },
-    { icon: '🛠️', name: 'Hardware', sortOrder: 19, isNonFood: true },
+    { icon: '🍼', isNonFood: true, name: 'Baby & Kids', sortOrder: 13 },
+    { icon: '🐾', isNonFood: true, name: 'Pet Supplies', sortOrder: 14 },
+    { icon: '🧼', isNonFood: true, name: 'Cleaning Supplies', sortOrder: 15 },
+    { icon: '🧴', isNonFood: true, name: 'Household', sortOrder: 16 },
+    { icon: '🪥', isNonFood: true, name: 'Personal Care', sortOrder: 17 },
+    { icon: '💊', isNonFood: true, name: 'Health', sortOrder: 18 },
+    { icon: '🛠️', isNonFood: true, name: 'Hardware', sortOrder: 19 },
     { icon: '🛒', name: 'Other', sortOrder: 20 },
 ];
 
@@ -35,13 +35,13 @@ export const DEFAULT_TAGS = [
 ];
 
 export enum SSEMessageType {
-    RECIPE_UPDATE = 'recipe_update',
-    RECIPE_DELETE = 'recipe_delete',
-    PANTRY_UPDATE = 'pantry_update',
     CATEGORY_UPDATE = 'category_update',
+    PANTRY_UPDATE = 'pantry_update',
+    RECIPE_DELETE = 'recipe_delete',
+    RECIPE_UPDATE = 'recipe_update',
     USER_UPDATE = 'user_update',
 }
 
-export const EXPIRATION_WINDOW_DAYS = !!process.env.EXPIRATION_WINDOW_DAYS
+export const EXPIRATION_WINDOW_DAYS = process.env.EXPIRATION_WINDOW_DAYS
     ? parseInt(process.env.EXPIRATION_WINDOW_DAYS, 10)
     : 4; // days

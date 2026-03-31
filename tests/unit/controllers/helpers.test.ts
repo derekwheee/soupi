@@ -1,23 +1,24 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+
 import { parseBody } from '../../../src/controllers/helpers';
 
 function mockRes() {
     const json = vi.fn();
     const status = vi.fn().mockReturnValue({ json });
-    return { status, json, _json: json, _status: status };
+    return { _json: json, _status: status, json, status };
 }
 
 const SimpleSchema = z.object({
-    name: z.string().min(1),
     age: z.number().int().positive(),
+    name: z.string().min(1),
 });
 
 describe('parseBody()', () => {
     it('returns parsed data when body is valid', () => {
         const res = mockRes() as any;
-        const result = parseBody(res, SimpleSchema, { name: 'Alice', age: 30 });
-        expect(result).toEqual({ name: 'Alice', age: 30 });
+        const result = parseBody(res, SimpleSchema, { age: 30, name: 'Alice' });
+        expect(result).toEqual({ age: 30, name: 'Alice' });
         expect(res.status).not.toHaveBeenCalled();
     });
 
@@ -27,7 +28,7 @@ describe('parseBody()', () => {
         expect(result).toBeNull();
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.status().json).toHaveBeenCalledWith(
-            expect.objectContaining({ error: 'Invalid request body', details: expect.any(Object) }),
+            expect.objectContaining({ details: expect.any(Object), error: 'Invalid request body' }),
         );
     });
 
@@ -40,7 +41,7 @@ describe('parseBody()', () => {
 
     it('includes Zod flatten details in 400 response', () => {
         const res = mockRes() as any;
-        parseBody(res, SimpleSchema, { name: 'Alice', age: -5 });
+        parseBody(res, SimpleSchema, { age: -5, name: 'Alice' });
         const call = res.status().json.mock.calls[0][0];
         expect(call.details).toHaveProperty('fieldErrors');
     });

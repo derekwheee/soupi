@@ -1,16 +1,17 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
+
+import logger from '../../utils/logger';
 import {
+    completeRecipe,
     createRecipeFromUrl,
+    deleteRecipe,
     getAllRecipes,
+    getAllRecipeTags,
     getRecipe,
     upsertRecipe,
-    deleteRecipe,
-    getAllRecipeTags,
-    completeRecipe,
 } from '../controllers/recipe';
-import { scrapeRecipe, RecipeJSON } from '../services/scraper';
 import requireAuth from '../middleware/require-auth';
-import logger from '../../utils/logger';
+import { RecipeJSON, scrapeRecipe } from '../services/scraper';
 
 const router = Router();
 const prefix = '/household/:householdId/recipes';
@@ -30,7 +31,7 @@ router.get(
                 return res.status(400).json({ error: 'Missing url param' });
             }
 
-            const recipe: RecipeJSON | null = await scrapeRecipe(url);
+            const recipe: null | RecipeJSON = await scrapeRecipe(url);
             res.json(recipe);
         } catch (err) {
             logger.error({ err }, 'Failed to scrape recipe');

@@ -1,5 +1,6 @@
 // sse.ts
 import { Response } from 'express';
+
 import { SSEMessageType } from './constants';
 
 export const clientsByHousehold = new Map<number, Response[]>();
@@ -24,9 +25,9 @@ export async function broadcast<T>(
 ) {
     const data = await cb();
     const message: BroadcastMessage = {
-        type,
-        from,
         data,
+        from,
+        type,
     };
     const clients = clientsByHousehold.get(householdId) ?? [];
     clients.forEach((res) => res.write(`data: ${JSON.stringify(message)}\n\n`));

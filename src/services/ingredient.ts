@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
-import prisma from '../../prisma';
 import { spawnSync } from 'node:child_process';
+
+import prisma from '../../prisma';
 import logger from '../../utils/logger';
 
 type RecipeWithJoins = Prisma.RecipeGetPayload<{
@@ -8,13 +9,13 @@ type RecipeWithJoins = Prisma.RecipeGetPayload<{
 }>;
 
 export async function parseIngredients(recipeId: number, isRetry?: boolean): Promise<RecipeWithJoins>;
-export async function parseIngredients(recipe: any, isRetry?: boolean): Promise<RecipeWithJoins>;
+export async function parseIngredients(recipe: RecipeWithJoins, isRetry?: boolean): Promise<RecipeWithJoins>;
 export async function parseIngredients(arg: number | RecipeWithJoins, isRetry?: boolean): Promise<RecipeWithJoins> {
     const recipe: RecipeWithJoins =
         typeof arg === 'number'
             ? await prisma.recipe.findUniqueOrThrow({
-                where: { id: arg },
                 include: { ingredients: true, tags: true },
+                where: { id: arg },
             })
             : arg;
 
@@ -25,8 +26,8 @@ export async function parseIngredients(arg: number | RecipeWithJoins, isRetry?: 
     if (!python || !parser) throw new Error('NLP_PYTHON_PATH and NLP_PARSER_PATH are required');
 
     const result = spawnSync(python, [parser, '-j', JSON.stringify(ingredientSentences)], {
-        stdio: ['inherit', 'pipe', 'pipe'],
         encoding: 'utf-8',
+        stdio: ['inherit', 'pipe', 'pipe'],
         timeout: 30_000,
     });
 
@@ -53,7 +54,7 @@ export async function parseIngredients(arg: number | RecipeWithJoins, isRetry?: 
         return parseIngredients(recipe, true);
     }
 
-    let parsedIngredients: Array<{ sentence: string; name?: { text: string }[]; size?: { text: string }; amount?: { quantity: string; unit: string }[]; preparation?: { text: string } }>;
+    let parsedIngredients: Array<{ amount?: { quantity: string; unit: string }[]; name?: { text: string }[]; preparation?: { text: string }; sentence: string; size?: { text: string }; }>;
     try {
         parsedIngredients = JSON.parse(result.stdout);
     } catch {
@@ -69,26 +70,26 @@ export async function parseIngredients(arg: number | RecipeWithJoins, isRetry?: 
 
         return {
             ...ingredient,
-            item: parsed?.name?.[0].text,
-            size: parsed?.size?.text,
             amount: parsed?.amount?.[0]?.quantity || null,
-            unit: parsed?.amount?.[0]?.unit,
+            item: parsed?.name?.[0].text,
+            json: parsed,
             preparation: parsed?.preparation?.text,
-            json: parsed
+            size: parsed?.size?.text,
+            unit: parsed?.amount?.[0]?.unit
         };
     });
 
     const updates = ingredients.map(({ id, ...ingredient }) =>
         prisma.ingredient.update({
-            where: { id },
-            data: ingredient
+            data: ingredient,
+            where: { id }
         }));
 
     await prisma.$transaction(updates);
 
     const updatedRecipe = await prisma.recipe.findUniqueOrThrow({
-        where: { id: recipe.id },
         include: { ingredients: true, tags: true },
+        where: { id: recipe.id },
     });
 
     return updatedRecipe;

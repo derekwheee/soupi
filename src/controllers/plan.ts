@@ -1,14 +1,9 @@
+import { Household } from '@prisma/client';
 import { Request, Response } from 'express';
+
+import { AddPlanDaySchema, AddRecipesToPlanDaySchema } from '../schemas';
 import * as planService from '../services/plan';
 import { householdController, parseBody } from './helpers';
-import { Household } from '@prisma/client';
-import { AddPlanDaySchema, AddRecipesToPlanDaySchema } from '../schemas';
-
-export async function getPlan(req: Request, res: Response) {
-    return await householdController(req, res, (household: Household) =>
-        planService.getPlan(household.id),
-    );
-}
 
 export async function addPlanDay(req: Request, res: Response) {
     return await householdController(req, res, (household: Household) => {
@@ -16,13 +11,6 @@ export async function addPlanDay(req: Request, res: Response) {
         if (!body) return;
         return planService.addPlanDay(household.id, body);
     });
-}
-
-export async function removePlanDay(req: Request, res: Response) {
-    const { planDayId } = req.params;
-    return await householdController(req, res, () =>
-        planService.removePlanDay(Number(planDayId)),
-    );
 }
 
 export async function addRecipesToPlanDay(req: Request, res: Response) {
@@ -34,6 +22,19 @@ export async function addRecipesToPlanDay(req: Request, res: Response) {
             recipeIds: body,
         });
     });
+}
+
+export async function getPlan(req: Request, res: Response) {
+    return await householdController(req, res, (household: Household) =>
+        planService.getPlan(household.id),
+    );
+}
+
+export async function removePlanDay(req: Request, res: Response) {
+    const { planDayId } = req.params;
+    return await householdController(req, res, () =>
+        planService.removePlanDay(Number(planDayId)),
+    );
 }
 
 export async function removeRecipeFromPlanDay(req: Request, res: Response) {

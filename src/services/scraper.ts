@@ -1,41 +1,23 @@
-import puppeteer, { Page } from 'puppeteer';
 import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
+import puppeteer, { Page } from 'puppeteer';
 import { z } from 'zod';
 
 export interface RecipeJSON {
-    name: string | null;
-    prepTime: string | null;
-    cookTime: string | null;
-    servings: string | null;
+    cookTime: null | string;
     ingredients: string[];
     instructions: string[];
-    source: string | null;
-}
-
-function cleanInstructions(recipeInstructions: any): string[] {
-    const instructions = Array.isArray(recipeInstructions)
-        ? recipeInstructions.map((step: any) =>
-              typeof step === 'string' ? step : step.text,
-          )
-        : [];
-
-    return instructions
-        .map((step) =>
-            step
-                .replace(/\s*<[^>]*>\s*/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim(),
-        )
-        .filter((step) => step.length > 0 && /\s/.test(step));
+    name: null | string;
+    prepTime: null | string;
+    servings: null | string;
+    source: null | string;
 }
 
 export async function scrapeRecipe(
     url: string,
     { isRetry }: { isRetry?: boolean } = {},
-): Promise<RecipeJSON | null> {
+): Promise<null | RecipeJSON> {
     const browser = await puppeteer.launch({
-        headless: true,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -43,6 +25,7 @@ export async function scrapeRecipe(
             '--disable-extensions',
             '--disable-gpu',
         ],
+        headless: true,
     });
     const page = await browser.newPage();
 
@@ -64,16 +47,6 @@ export async function scrapeRecipe(
 
     const parsed = await generateObject({
         model: openai('gpt-4o-mini'),
-        schema: z.object({
-            name: z.string(),
-            prepTime: z.string().optional(),
-            cookTime: z.string().optional(),
-            servings: z.string().optional(),
-            ingredients: z.array(z.string()),
-            instructions: z.array(z.string()),
-            explanation: z.string().optional(),
-            externalLink: z.string().optional(),
-        }),
         prompt: `
             Parse the following text into a recipe and format it as JSON.
             Never under any circumstances should you hallucinate recipe details.
@@ -88,6 +61,16 @@ export async function scrapeRecipe(
             Text to parse:
             ${textToParse.toString()}
         `,
+        schema: z.object({
+            cookTime: z.string().optional(),
+            explanation: z.string().optional(),
+            externalLink: z.string().optional(),
+            ingredients: z.array(z.string()),
+            instructions: z.array(z.string()),
+            name: z.string(),
+            prepTime: z.string().optional(),
+            servings: z.string().optional(),
+        }),
     });
 
     const recipe = parsed?.object;
@@ -102,15 +85,83 @@ export async function scrapeRecipe(
 
     return recipe
         ? {
-              name: recipe.name,
-              prepTime: parseTimes(recipe.prepTime) || null,
               cookTime: parseTimes(recipe.cookTime) || null,
-              servings: recipe.servings || null,
               ingredients: recipe.ingredients || [],
               instructions: cleanInstructions(recipe.instructions) || [],
+              name: recipe.name,
+              prepTime: parseTimes(recipe.prepTime) || null,
+              servings: recipe.servings || null,
               source: url,
           }
         : null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function cleanInstructions(recipeInstructions: any): string[] {
+    const instructions = Array.isArray(recipeInstructions)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ? recipeInstructions.map((step: any) =>
+              typeof step === 'string' ? step : step.text,
+          )
+        : [];
+
+    return instructions
+        .map((step) =>
+            step
+                .replace(/\s*<[^>]*>\s*/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim(),
+        )
+        .filter((step) => step.length > 0 && /\s/.test(step));
+}
+
+async function getRecipeFromMeta(page: Page, url: string) {
+    await page.goto(url, {
+        timeout: 10000,
+        waitUntil: 'networkidle2',
+    });
+
+    const metaTags = await page.evaluate(() => {
+        const metaElements = Array.from(document.head.querySelectorAll('meta'));
+        return metaElements.map((meta: HTMLMetaElement) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const attributes: any = {};
+            for (const attr of Array.from(meta.attributes)) {
+                attributes[attr.name] = attr.value;
+            }
+            return attributes;
+        });
+    });
+
+    return metaTags?.find((tag) => tag.property === 'og:description')?.content;
+}
+
+function parseTimes(
+    time?: null | string | undefined,
+): null | string | undefined {
+    if (!time) return time;
+
+    if (time.match(/PT\d+\w+/)) {
+        const [, minutes, flag] = /(\d+)(\w+)/.exec(time) || [];
+        let parsed = '';
+
+        if (flag === 'M') {
+            const mins = Number(minutes);
+            const hours = Math.floor(mins / 60);
+            const remMinutes = mins % 60;
+
+            if (hours > 0) {
+                parsed += `${hours} hour${hours > 1 ? 's ' : ' '}`;
+            }
+            if (remMinutes > 0) {
+                parsed += `${remMinutes} min${remMinutes > 1 ? 's' : ''}`;
+            }
+
+            return parsed.trim();
+        }
+    }
+
+    return time;
 }
 
 async function parseWebsiteRecipe(page: Page, url: string) {
@@ -139,52 +190,4 @@ async function parseWebsiteRecipe(page: Page, url: string) {
             )
             .join(',');
     });
-}
-
-async function getRecipeFromMeta(page: Page, url: string) {
-    await page.goto(url, {
-        timeout: 10000,
-        waitUntil: 'networkidle2',
-    });
-
-    const metaTags = await page.evaluate(() => {
-        const metaElements = Array.from(document.head.querySelectorAll('meta'));
-        return metaElements.map((meta: any) => {
-            const attributes: any = {};
-            for (const attr of meta.attributes) {
-                attributes[attr.name] = attr.value;
-            }
-            return attributes;
-        });
-    });
-
-    return metaTags?.find((tag) => tag.property === 'og:description')?.content;
-}
-
-function parseTimes(
-    time?: string | null | undefined,
-): string | null | undefined {
-    if (!time) return time;
-
-    if (time.match(/PT\d+\w+/)) {
-        const [, minutes, flag] = /(\d+)(\w+)/.exec(time) || [];
-        let parsed = '';
-
-        if (flag === 'M') {
-            const mins = Number(minutes);
-            const hours = Math.floor(mins / 60);
-            const remMinutes = mins % 60;
-
-            if (hours > 0) {
-                parsed += `${hours} hour${hours > 1 ? 's ' : ' '}`;
-            }
-            if (remMinutes > 0) {
-                parsed += `${remMinutes} min${remMinutes > 1 ? 's' : ''}`;
-            }
-
-            return parsed.trim();
-        }
-    }
-
-    return time;
 }

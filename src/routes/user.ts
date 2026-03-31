@@ -1,4 +1,5 @@
 import { Router } from 'express';
+
 import { getUser, syncUser, updateUser } from '../controllers/user';
 import requireAuth from '../middleware/require-auth';
 

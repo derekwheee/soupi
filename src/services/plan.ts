@@ -1,5 +1,51 @@
 import { Plan } from '@prisma/client';
+
 import prisma from '../../prisma';
+
+export async function addPlanDay(
+    householdId: number,
+    {
+        date,
+        planId,
+    }: {
+        date: Date;
+        planId: number;
+    },
+): Promise<Plan> {
+    return prisma.plan.update({
+        data: {
+            planDays: {
+                create: {
+                    date,
+                },
+            },
+        },
+        include: {
+            planDays: {
+                include: { recipes: true },
+                where: { deletedAt: null },
+            },
+        },
+        where: { householdId, id: planId },
+    });
+}
+
+export async function addRecipesToPlanDay({
+    planDayId,
+    recipeIds,
+}: {
+    planDayId: number;
+    recipeIds: number[];
+}): Promise<void> {
+    await prisma.planDay.update({
+        data: {
+            recipes: {
+                connect: recipeIds.map((id) => ({ id })),
+            },
+        },
+        where: { id: planDayId },
+    });
+}
 
 export async function createPlan(householdId: number): Promise<Plan> {
     return prisma.$transaction(async (tx) => {
@@ -26,13 +72,8 @@ export async function createPlan(householdId: number): Promise<Plan> {
 
 export async function getPlan(householdId: number): Promise<Plan> {
     return prisma.plan.findFirstOrThrow({
-        where: {
-            householdId,
-            deletedAt: null,
-        },
         include: {
             planDays: {
-                where: { deletedAt: null },
                 include: {
                     recipes: {
                         include: {
@@ -40,62 +81,22 @@ export async function getPlan(householdId: number): Promise<Plan> {
                         },
                     },
                 },
-            },
-        },
-    });
-}
-
-export async function addPlanDay(
-    householdId: number,
-    {
-        planId,
-        date,
-    }: {
-        planId: number;
-        date: Date;
-    },
-): Promise<Plan> {
-    return prisma.plan.update({
-        where: { id: planId, householdId },
-        data: {
-            planDays: {
-                create: {
-                    date,
-                },
-            },
-        },
-        include: {
-            planDays: {
                 where: { deletedAt: null },
-                include: { recipes: true },
             },
+        },
+        where: {
+            deletedAt: null,
+            householdId,
         },
     });
 }
 
 export async function removePlanDay(planDayId: number): Promise<void> {
     await prisma.planDay.update({
-        where: { id: planDayId },
         data: {
             deletedAt: new Date(),
         },
-    });
-}
-
-export async function addRecipesToPlanDay({
-    planDayId,
-    recipeIds,
-}: {
-    planDayId: number;
-    recipeIds: number[];
-}): Promise<void> {
-    await prisma.planDay.update({
         where: { id: planDayId },
-        data: {
-            recipes: {
-                connect: recipeIds.map((id) => ({ id })),
-            },
-        },
     });
 }
 
@@ -107,11 +108,11 @@ export async function removeRecipeFromPlanDay({
     recipeId: number;
 }): Promise<void> {
     await prisma.planDay.update({
-        where: { id: planDayId },
         data: {
             recipes: {
                 disconnect: { id: recipeId },
             },
         },
+        where: { id: planDayId },
     });
 }

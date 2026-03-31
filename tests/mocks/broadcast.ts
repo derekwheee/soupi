@@ -6,6 +6,6 @@ export const broadcastMock = vi.fn(
 );
 
 vi.mock('../../utils/sse', () => ({
-    broadcast: broadcastMock,
     addClient: vi.fn(),
+    broadcast: broadcastMock,
 }));

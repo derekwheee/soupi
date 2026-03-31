@@ -1,5 +1,6 @@
-import { PrismaClient, Prisma } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
+
 import { parseIngredients } from '../src/services/ingredient';
 import { createRecipeFromUrl } from '../src/services/recipe';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../utils/constants';
@@ -22,9 +23,9 @@ async function main() {
     if (!user) {
         user = await prisma.user.create({
             data: {
-                id: userId!,
                 clerkId: userId!,
-                email: ''
+                email: '',
+                id: userId!
             }
         });
         console.log(`Created user with id: ${userId}`)
@@ -32,22 +33,22 @@ async function main() {
 
     const household = await prisma.household.create({
         data: {
-            name: "My Household",
             members: { connect: { id: user.id! } },
+            name: "My Household",
         }
     })
 
     await prisma.user.update({
-        where: { id: user.id! },
-        data: { defaultHouseholdId: household.id }
+        data: { defaultHouseholdId: household.id },
+        where: { id: user.id! }
     });
 
     // Create default pantry
     const pantry = await prisma.pantry.create({
         data: {
-            name: "My Pantry",
+            household: { connect: { id: household.id } },
             isDefault: true,
-            household: { connect: { id: household.id } }
+            name: "My Pantry"
         }
     });
 
@@ -76,11 +77,8 @@ async function main() {
 
     const recipeData: Prisma.RecipeUncheckedCreateInput[] = [
         {
-            householdId: household.id,
-            name: 'Pancakes',
             cookTime: '15 mins',
-            prepTime: '20 mins',
-            servings: 4,
+            householdId: household.id,
             ingredients: {
                 create: [
                     { sentence: '2 cups all-purpose flour' },
@@ -102,20 +100,20 @@ async function main() {
                 "Flip the pancakes and cook for another 1-2 minutes, until golden brown and cooked through.",
                 "Serve warm with your favorite toppings such as maple syrup, fresh fruit, or whipped cream."
             ],
+            name: 'Pancakes',
+            prepTime: '20 mins',
+            servings: 4,
             tags: {
                 connectOrCreate: [
-                    { where: { name: 'breakfast' }, create: { name: 'breakfast', householdId: household.id } },
-                    { where: { name: 'easy' }, create: { name: 'easy', householdId: household.id } },
-                    { where: { name: 'vegetarian' }, create: { name: 'vegetarian', householdId: household.id } }
+                    { create: { householdId: household.id, name: 'breakfast' }, where: { name: 'breakfast' } },
+                    { create: { householdId: household.id, name: 'easy' }, where: { name: 'easy' } },
+                    { create: { householdId: household.id, name: 'vegetarian' }, where: { name: 'vegetarian' } }
                 ]
             }
         },
         {
-            householdId: household.id,
-            name: 'Avocado Toast',
             cookTime: '5 mins',
-            prepTime: '10 mins',
-            servings: 2,
+            householdId: household.id,
             ingredients: {
                 create: [
                     { sentence: '2 slices whole grain bread' },
@@ -132,35 +130,38 @@ async function main() {
                 "Spread the mashed avocado evenly over the toasted bread slices.",
                 "Serve immediately and enjoy!"
             ],
+            name: 'Avocado Toast',
+            prepTime: '10 mins',
+            servings: 2,
             tags: {
                 connectOrCreate: [
-                    { where: { name: 'breakfast' }, create: { name: 'breakfast', householdId: household.id } },
-                    { where: { name: '<30mins' }, create: { name: '<30mins', householdId: household.id } },
-                    { where: { name: 'healthy' }, create: { name: 'healthy', householdId: household.id } },
-                    { where: { name: 'vegetarian' }, create: { name: 'vegetarian', householdId: household.id } }
+                    { create: { householdId: household.id, name: 'breakfast' }, where: { name: 'breakfast' } },
+                    { create: { householdId: household.id, name: '<30mins' }, where: { name: '<30mins' } },
+                    { create: { householdId: household.id, name: 'healthy' }, where: { name: 'healthy' } },
+                    { create: { householdId: household.id, name: 'vegetarian' }, where: { name: 'vegetarian' } }
                 ]
             }
         }
     ];
 
     const pantryItemData: Prisma.PantryItemCreateInput[] = [
-        { name: 'all-purpose flour', isInStock: true, category: 'Baking' },
-        { name: 'sugar', isInStock: true, category: 'Baking' },
-        { name: 'eggs', isInStock: true, category: 'Dairy' },
-        { name: 'milk', isInStock: true, category: 'Dairy' },
-        { name: 'whole grain bread', isInStock: true, category: 'Bakery' },
-        { name: 'avocado', isInStock: true, category: 'Produce' },
-        { name: 'olive oil', isInStock: true, category: 'Condiments & Spices' },
-        { name: 'lemon juice', category: 'Condiments & Spices' },
-        { name: 'salt', category: 'Condiments & Spices' },
-        { name: 'pepper', category: 'Condiments & Spices' },
-        { name: 'baking powder', isInStock: false, isInShoppingList: true, category: 'Baking' },
-        { name: 'baking soda', isInStock: false, isInShoppingList: true, category: 'Baking' },
-        { name: 'butter', isInStock: false, isInShoppingList: true, category: 'Dairy' }
+        { category: 'Baking', isInStock: true, name: 'all-purpose flour' },
+        { category: 'Baking', isInStock: true, name: 'sugar' },
+        { category: 'Dairy', isInStock: true, name: 'eggs' },
+        { category: 'Dairy', isInStock: true, name: 'milk' },
+        { category: 'Bakery', isInStock: true, name: 'whole grain bread' },
+        { category: 'Produce', isInStock: true, name: 'avocado' },
+        { category: 'Condiments & Spices', isInStock: true, name: 'olive oil' },
+        { category: 'Condiments & Spices', name: 'lemon juice' },
+        { category: 'Condiments & Spices', name: 'salt' },
+        { category: 'Condiments & Spices', name: 'pepper' },
+        { category: 'Baking', isInShoppingList: true, isInStock: false, name: 'baking powder' },
+        { category: 'Baking', isInShoppingList: true, isInStock: false, name: 'baking soda' },
+        { category: 'Dairy', isInShoppingList: true, isInStock: false, name: 'butter' }
     ].map(item => ({
         ...item,
-        pantry: { connect: { id: pantry.id } },
-        category: { connect: { name: item.category } }
+        category: { connect: { name: item.category } },
+        pantry: { connect: { id: pantry.id } }
     }));
 
     // Seed categories
@@ -183,7 +184,7 @@ async function main() {
     // Seed tags
     for (const t of tags) {
         const existingTag = await prisma.recipeTag.findFirst({
-            where: { name: t.name, householdId: household.id },
+            where: { householdId: household.id, name: t.name },
         });
 
         if (existingTag) {
@@ -200,7 +201,7 @@ async function main() {
     // Seed recipes
     for (const u of recipeData) {
         const existingRecipe = await prisma.recipe.findFirst({
-            where: { name: u.name, householdId: household.id },
+            where: { householdId: household.id, name: u.name },
         });
 
         if (existingRecipe) {
