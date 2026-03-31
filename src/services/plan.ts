@@ -2,24 +2,26 @@ import { Plan } from '@prisma/client';
 import prisma from '../../prisma';
 
 export async function createPlan(householdId: number): Promise<Plan> {
-    const plan = await prisma.plan.create({
-        data: {
-            household: { connect: { id: householdId } },
-        },
-    });
-
-    await prisma.planDay.create({
-        data: {
-            // Create a plan day with an explicit null date
-            // This is the "upcoming" plan day
-            date: null,
-            plan: {
-                connect: { id: plan.id },
+    return prisma.$transaction(async (tx) => {
+        const plan = await tx.plan.create({
+            data: {
+                household: { connect: { id: householdId } },
             },
-        },
-    });
+        });
 
-    return plan;
+        await tx.planDay.create({
+            data: {
+                // Create a plan day with an explicit null date
+                // This is the "upcoming" plan day
+                date: null,
+                plan: {
+                    connect: { id: plan.id },
+                },
+            },
+        });
+
+        return plan;
+    });
 }
 
 export async function getPlan(householdId: number): Promise<Plan> {

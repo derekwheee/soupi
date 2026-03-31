@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import * as recipeService from '../services/recipe';
-import { householdController } from './helpers';
+import { householdController, parseBody } from './helpers';
 import { Household } from '@prisma/client';
+import { CompleteRecipeSchema, UpsertRecipeSchema } from '../schemas';
 
 export async function createRecipeFromUrl(req: Request, res: Response) {
     return await householdController(req, res, async (household: Household) => {
@@ -28,9 +29,11 @@ export async function createRecipeFromUrl(req: Request, res: Response) {
 }
 
 export async function getAllRecipes(req: Request, res: Response) {
-    return await householdController(req, res, (household: Household) =>
-        recipeService.getAllRecipes(household.id),
-    );
+    return await householdController(req, res, (household: Household) => {
+        const page = Math.max(1, parseInt(req.query.page as string) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+        return recipeService.getAllRecipes(household.id, { page, limit });
+    });
 }
 
 export async function getRecipe(req: Request, res: Response) {
@@ -40,9 +43,11 @@ export async function getRecipe(req: Request, res: Response) {
 }
 
 export async function upsertRecipe(req: Request, res: Response) {
-    return await householdController(req, res, (household: Household) =>
-        recipeService.upsertRecipe(household.id, req.body),
-    );
+    return await householdController(req, res, (household: Household) => {
+        const body = parseBody(res, UpsertRecipeSchema, req.body);
+        if (!body) return;
+        return recipeService.upsertRecipe(household.id, body);
+    });
 }
 
 export async function deleteRecipe(req: Request, res: Response) {
@@ -58,7 +63,9 @@ export async function getAllRecipeTags(req: Request, res: Response) {
 }
 
 export async function completeRecipe(req: Request, res: Response) {
-    return await householdController(req, res, (household: Household) =>
-        recipeService.completeRecipe(household.id, req.body),
-    );
+    return await householdController(req, res, (household: Household) => {
+        const body = parseBody(res, CompleteRecipeSchema, req.body);
+        if (!body) return;
+        return recipeService.completeRecipe(household.id, body);
+    });
 }

@@ -1,10 +1,10 @@
-// server.js
+import requireAuth from '../middleware/require-auth';
 import { Router } from 'express';
 import { addClient } from '../../utils/sse';
 
 const router = Router();
 
-router.get('/:householdId', (req, res) => {
+router.get('/:householdId', requireAuth(), (req, res) => {
     // Required headers for SSE
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');

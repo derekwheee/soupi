@@ -32,18 +32,17 @@ type RecipeCompletion = {
 
 export async function getAllRecipes(
     householdId: number,
+    { page = 1, limit = 50 }: { page?: number; limit?: number } = {},
 ): Promise<RecipeWithJoins[]> {
-    // broadcast(householdId, {
-    //     type: SSEMessageType.RECIPE_UPDATE,
-    //     from: 'getAllRecipes',
-    //     data: {},
-    // });
     return prisma.recipe.findMany({
         where: { householdId, deletedAt: null },
         include: {
             ingredients: { orderBy: { id: 'asc' } },
             tags: { orderBy: { id: 'asc' } },
         },
+        orderBy: { id: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
     });
 }
 
@@ -210,16 +209,18 @@ const processIngredients = async (recipe: Recipe, ingredients?: string[]) => {
     let newIngredients;
 
     if (ingredients && ingredients.length > 0) {
-        await prisma.ingredient.deleteMany({
-            where: { recipeId: recipe.id },
-        });
-
-        newIngredients = await prisma.ingredient.createManyAndReturn({
-            data: ingredients.map((sentence: string) => ({
-                recipeId: recipe.id,
-                sentence,
-            })),
-        });
+        const [, created] = await prisma.$transaction([
+            prisma.ingredient.deleteMany({
+                where: { recipeId: recipe.id },
+            }),
+            prisma.ingredient.createManyAndReturn({
+                data: ingredients.map((sentence: string) => ({
+                    recipeId: recipe.id,
+                    sentence,
+                })),
+            }),
+        ]);
+        newIngredients = created;
     }
 
     return parseIngredients({

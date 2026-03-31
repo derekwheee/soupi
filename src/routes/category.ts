@@ -10,8 +10,8 @@ import {
 const router = Router();
 const prefix = '/household/:householdId/pantry/:pantryId/category';
 
-router.get(prefix, getCategories);
-router.post(`${prefix}`, upsertCategory);
+router.get(prefix, requireAuth(), getCategories);
+router.post(`${prefix}`, requireAuth(), upsertCategory);
 router.get(`${prefix}/:categoryId`, requireAuth(), getCategory);
 router.post(`${prefix}/sort-order`, requireAuth(), updateSortOrder);
 

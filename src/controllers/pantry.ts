@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import * as pantryService from '../services/pantry';
-import { householdController } from './helpers';
+import { householdController, parseBody } from './helpers';
 import { Household } from '@prisma/client';
+import { UpsertPantryItemSchema } from '../schemas';
 
 export async function getPantries(req: Request, res: Response) {
     return await householdController(req, res, (household: Household) =>
@@ -11,12 +12,14 @@ export async function getPantries(req: Request, res: Response) {
 
 export async function upsertPantryItem(req: Request, res: Response) {
     const { pantryId } = req.params;
-    return await householdController(req, res, (household: Household) =>
-        pantryService.upsertPantryItem(household.id, {
+    return await householdController(req, res, (household: Household) => {
+        const body = parseBody(res, UpsertPantryItemSchema, req.body);
+        if (!body) return;
+        return pantryService.upsertPantryItem(household.id, {
             pantryId: Number(pantryId),
-            ...req.body,
-        }),
-    );
+            ...body,
+        });
+    });
 }
 
 export async function getAllPantryItems(req: Request, res: Response) {

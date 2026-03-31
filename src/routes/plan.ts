@@ -11,10 +11,10 @@ import {
 const router = Router();
 const prefix = '/household/:householdId/plan';
 
-router.get(prefix, getPlan);
-router.post(`${prefix}/day`, addPlanDay);
+router.get(prefix, requireAuth(), getPlan);
+router.post(`${prefix}/day`, requireAuth(), addPlanDay);
 router.delete(`${prefix}/day/:planDayId`, requireAuth(), removePlanDay);
-router.post(`${prefix}/day/:planDayId/recipes`, addRecipesToPlanDay);
+router.post(`${prefix}/day/:planDayId/recipes`, requireAuth(), addRecipesToPlanDay);
 router.delete(`${prefix}/day/:planDayId/recipes/:recipeId`, requireAuth(), removeRecipeFromPlanDay);
 
 export default router;

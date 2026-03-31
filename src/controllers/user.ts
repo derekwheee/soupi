@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import * as userService from '../services/user';
-import { controller } from './helpers';
+import { controller, parseBody } from './helpers';
 import { clerkClient, getAuth } from '@clerk/express'
+import { UpdateUserSchema } from '../schemas';
 
 export async function getUser(req: Request, res: Response) {
     const { userId } = getAuth(req);
@@ -20,8 +21,11 @@ export async function updateUser(req: Request, res: Response) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    const body = parseBody(res, UpdateUserSchema, req.body);
+    if (!body) return;
+
     return await controller(req, res, () =>
-        userService.updateUser(userId, req.body),
+        userService.updateUser(userId, body),
     );
 }
 

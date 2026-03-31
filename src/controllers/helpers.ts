@@ -4,6 +4,8 @@ import { Request, Response } from 'express';
 import { getAuth } from '@clerk/express';
 import he from 'he';
 import superjson from 'superjson';
+import { z } from 'zod';
+import logger from '../../utils/logger';
 
 function decodeEntitiesDeep(value: any): any {
     if (typeof value === 'string') {
@@ -16,6 +18,22 @@ function decodeEntitiesDeep(value: any): any {
         );
     }
     return value;
+}
+
+export function parseBody<T>(
+    res: Response,
+    schema: z.ZodType<T>,
+    body: unknown,
+): T | null {
+    const result = schema.safeParse(body);
+    if (!result.success) {
+        res.status(400).json({
+            error: 'Invalid request body',
+            details: result.error.flatten(),
+        });
+        return null;
+    }
+    return result.data;
 }
 
 async function hasAccessToHousehold(
@@ -47,7 +65,7 @@ export async function controller(
 
         res.json(decodeEntitiesDeep(json));
     } catch (error) {
-        console.error(error);
+        logger.error({ err: error }, 'Controller error');
         res.status(500).json(
             error instanceof Error
                 ? { error: error.message }

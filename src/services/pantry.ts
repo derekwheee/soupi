@@ -1,7 +1,12 @@
-import { Pantry, PantryItem } from '@prisma/client';
+import { Pantry, PantryItem, Prisma } from '@prisma/client';
 import prisma from '../../prisma';
 import { broadcast } from '../../utils/sse';
 import { SSEMessageType } from '../../utils/constants';
+
+type PantryItemInput = Partial<Omit<PantryItem, 'createdAt' | 'updatedAt' | 'deletedAt'>> & {
+    name: string;
+    pantryId: number;
+};
 
 export async function getPantries(householdId: number): Promise<Pantry> {
     // TODO: Get user's default pantry
@@ -41,7 +46,7 @@ export async function getPantryItem(
 
 export async function upsertPantryItem(
     householdId: number,
-    item: PantryItem,
+    item: PantryItemInput,
 ): Promise<PantryItem> {
     return await broadcast<PantryItem>(
         householdId,

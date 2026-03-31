@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import * as categoryService from '../services/category';
-import { householdController } from './helpers';
+import { householdController, parseBody } from './helpers';
 import { Household } from '@prisma/client';
+import { UpsertCategorySchema, UpdateSortOrderSchema } from '../schemas';
 
 export async function getCategories(req: Request, res: Response) {
     const { pantryId } = req.params;
@@ -19,18 +20,22 @@ export async function getCategory(req: Request, res: Response) {
 
 export async function upsertCategory(req: Request, res: Response) {
     const { pantryId } = req.params;
-    return await householdController(req, res, (household: Household) =>
-        categoryService.upsertCategory(household.id, Number(pantryId), req.body),
-    );
+    return await householdController(req, res, (household: Household) => {
+        const body = parseBody(res, UpsertCategorySchema, req.body);
+        if (!body) return;
+        return categoryService.upsertCategory(household.id, Number(pantryId), body);
+    });
 }
 
 export async function updateSortOrder(req: Request, res: Response) {
     const { pantryId } = req.params;
-    return await householdController(req, res, (household: Household) =>
-        categoryService.updateSortOrder(
+    return await householdController(req, res, (household: Household) => {
+        const body = parseBody(res, UpdateSortOrderSchema, req.body);
+        if (!body) return;
+        return categoryService.updateSortOrder(
             household.id,
             Number(pantryId),
-            req.body,
-        ),
-    );
+            body,
+        );
+    });
 }

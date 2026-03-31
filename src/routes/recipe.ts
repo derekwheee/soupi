@@ -10,6 +10,7 @@ import {
 } from '../controllers/recipe';
 import { scrapeRecipe, RecipeJSON } from '../services/scraper';
 import requireAuth from '../middleware/require-auth';
+import logger from '../../utils/logger';
 
 const router = Router();
 const prefix = '/household/:householdId/recipes';
@@ -32,7 +33,7 @@ router.get(
             const recipe: RecipeJSON | null = await scrapeRecipe(url);
             res.json(recipe);
         } catch (err) {
-            console.error(err);
+            logger.error({ err }, 'Failed to scrape recipe');
             res.status(500).json({ error: 'Failed to scrape recipe' });
         }
     },

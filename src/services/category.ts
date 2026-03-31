@@ -1,7 +1,11 @@
-import { ItemCategory } from '@prisma/client';
+import { ItemCategory, Prisma } from '@prisma/client';
 import prisma from '../../prisma';
 import { broadcast } from '../../utils/sse';
 import { SSEMessageType } from '../../utils/constants';
+
+type ItemCategoryInput = Partial<Omit<ItemCategory, 'createdAt' | 'updatedAt' | 'deletedAt' | 'pantryId'>> & {
+    name: string;
+};
 
 export async function getCategories(pantryId: number): Promise<ItemCategory[]> {
     return prisma.itemCategory.findMany({
@@ -22,7 +26,7 @@ export async function getCategory(
 export async function upsertCategory(
     householdId: number,
     pantryId: number,
-    item: ItemCategory,
+    item: ItemCategoryInput,
 ): Promise<ItemCategory> {
     return await broadcast<ItemCategory>(
         householdId,
@@ -83,13 +87,14 @@ export async function updateSortOrder(
                 throw new Error('Pantry not found or access denied');
             }
 
-            for (let index = 0; index < categoryIdsInOrder.length; ++index) {
-                const categoryId = categoryIdsInOrder[index];
-                await prisma.itemCategory.updateMany({
-                    where: { id: categoryId, pantryId },
-                    data: { sortOrder: index },
-                });
-            }
+            await prisma.$transaction(
+                categoryIdsInOrder.map((categoryId, index) =>
+                    prisma.itemCategory.updateMany({
+                        where: { id: categoryId, pantryId },
+                        data: { sortOrder: index },
+                    }),
+                ),
+            );
         },
     );
 }
