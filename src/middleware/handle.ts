@@ -1,0 +1,55 @@
+import { Request, Response } from 'express';
+import he from 'he';
+import { z } from 'zod';
+
+import logger from '../../utils/logger';
+
+export function handle(fn: (req: Request, res: Response) => unknown) {
+    return async (req: Request, res: Response) => {
+        try {
+            const result = await fn(req, res);
+
+            if (result === undefined) return;
+
+            if (typeof result !== 'object' || result === null) {
+                res.status(200).send(result);
+                return;
+            }
+
+            res.json(decodeEntitiesDeep(result));
+        } catch (error) {
+            logger.error({ err: error }, 'Route error');
+            res.status(500).json(
+                error instanceof Error
+                    ? { error: error.message }
+                    : { error: 'An unknown error occurred' },
+            );
+        }
+    };
+}
+
+export function parseBody<T>(res: Response, schema: z.ZodType<T>, body: unknown): null | T {
+    const result = schema.safeParse(body);
+    if (!result.success) {
+        res.status(400).json({
+            details: result.error.flatten(),
+            error: 'Invalid request body',
+        });
+        return null;
+    }
+    return result.data;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function decodeEntitiesDeep(value: any): any {
+    if (typeof value === 'string') {
+        return he.decode(value);
+    } else if (Array.isArray(value)) {
+        return value.map(decodeEntitiesDeep);
+    } else if (value && typeof value === 'object' && !(value instanceof Date)) {
+        return Object.fromEntries(
+            Object.entries(value).map(([k, v]) => [k, decodeEntitiesDeep(v)]),
+        );
+    }
+    return value;
+}
