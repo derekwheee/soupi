@@ -1,7 +1,13 @@
-import { OpenApiGeneratorV3, OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
+import {
+    extendZodWithOpenApi,
+    OpenApiGeneratorV3,
+    OpenAPIRegistry,
+} from '@asteasolutions/zod-to-openapi';
 import { Router } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { z } from 'zod';
+
+extendZodWithOpenApi(z);
 
 import PackageJson from '../../package.json';
 import {
