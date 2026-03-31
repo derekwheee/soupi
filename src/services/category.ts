@@ -4,7 +4,9 @@ import prisma from '../../prisma';
 import { SSEMessageType } from '../../utils/constants';
 import { broadcast } from '../../utils/sse';
 
-type ItemCategoryInput = Partial<Omit<ItemCategory, 'createdAt' | 'deletedAt' | 'pantryId' | 'updatedAt'>> & {
+type ItemCategoryInput = Partial<
+    Omit<ItemCategory, 'createdAt' | 'deletedAt' | 'pantryId' | 'updatedAt'>
+> & {
     name: string;
 };
 
@@ -15,10 +17,7 @@ export async function getCategories(pantryId: number): Promise<ItemCategory[]> {
     });
 }
 
-export async function getCategory(
-    pantryId: number,
-    categoryId: number,
-): Promise<ItemCategory> {
+export async function getCategory(pantryId: number, categoryId: number): Promise<ItemCategory> {
     return prisma.itemCategory.findFirstOrThrow({
         where: { id: categoryId, pantryId },
     });

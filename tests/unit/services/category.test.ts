@@ -7,10 +7,14 @@ import { prismaMock } from '../../mocks/prisma';
 vi.mock('../../../prisma/index', () => ({ default: prismaMock }));
 vi.mock('../../../utils/sse', () => ({
     addClient: vi.fn(),
-    broadcast: vi.fn(async (_hid: number, _type: unknown, _from: string, cb: () => Promise<unknown>) => cb()),
+    broadcast: vi.fn(
+        async (_hid: number, _type: unknown, _from: string, cb: () => Promise<unknown>) => cb(),
+    ),
 }));
 
-const { getCategories, updateSortOrder, upsertCategory } = await import('../../../src/services/category');
+const { getCategories, updateSortOrder, upsertCategory } = await import(
+    '../../../src/services/category'
+);
 
 describe('getCategories()', () => {
     it('returns categories sorted by sortOrder', async () => {
@@ -88,13 +92,16 @@ describe('updateSortOrder()', () => {
         await updateSortOrder(1, 1, [10, 20, 30]);
 
         expect(prismaMock.itemCategory.updateMany).toHaveBeenNthCalledWith(
-            1, expect.objectContaining({ data: { sortOrder: 0 }, where: { id: 10, pantryId: 1 } }),
+            1,
+            expect.objectContaining({ data: { sortOrder: 0 }, where: { id: 10, pantryId: 1 } }),
         );
         expect(prismaMock.itemCategory.updateMany).toHaveBeenNthCalledWith(
-            2, expect.objectContaining({ data: { sortOrder: 1 }, where: { id: 20, pantryId: 1 } }),
+            2,
+            expect.objectContaining({ data: { sortOrder: 1 }, where: { id: 20, pantryId: 1 } }),
         );
         expect(prismaMock.itemCategory.updateMany).toHaveBeenNthCalledWith(
-            3, expect.objectContaining({ data: { sortOrder: 2 }, where: { id: 30, pantryId: 1 } }),
+            3,
+            expect.objectContaining({ data: { sortOrder: 2 }, where: { id: 30, pantryId: 1 } }),
         );
     });
 

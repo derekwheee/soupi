@@ -6,8 +6,7 @@ import { SSEMessageType } from './constants';
 export const clientsByHousehold = new Map<number, Response[]>();
 
 export function addClient(householdId: number, res: Response) {
-    if (!clientsByHousehold.has(householdId))
-        clientsByHousehold.set(householdId, []);
+    if (!clientsByHousehold.has(householdId)) clientsByHousehold.set(householdId, []);
     clientsByHousehold.get(householdId)!.push(res);
 
     res.on('close', () => {
@@ -31,6 +30,6 @@ export async function broadcast<T>(
     };
     const clients = clientsByHousehold.get(householdId) ?? [];
     clients.forEach((res) => res.write(`data: ${JSON.stringify(message)}\n\n`));
-    
+
     return data;
 }

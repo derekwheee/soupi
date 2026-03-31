@@ -15,14 +15,10 @@ export async function completeRecipe(req: Request, res: Response) {
 
 export async function createRecipeFromUrl(req: Request, res: Response) {
     return await householdController(req, res, async (household: Household) => {
-        const queryUrl = (req.query && (req.query.url as string)) as
-            | string
-            | undefined;
+        const queryUrl = (req.query && (req.query.url as string)) as string | undefined;
 
         if (!queryUrl || typeof queryUrl !== 'string') {
-            return res
-                .status(400)
-                .json({ error: 'url query parameter is required' });
+            return res.status(400).json({ error: 'url query parameter is required' });
         }
 
         // Decode if encoded; decodeURIComponent is a no-op for plain strings

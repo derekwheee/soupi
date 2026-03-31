@@ -32,9 +32,7 @@ export async function getPlan(req: Request, res: Response) {
 
 export async function removePlanDay(req: Request, res: Response) {
     const { planDayId } = req.params;
-    return await householdController(req, res, () =>
-        planService.removePlanDay(Number(planDayId)),
-    );
+    return await householdController(req, res, () => planService.removePlanDay(Number(planDayId)));
 }
 
 export async function removeRecipeFromPlanDay(req: Request, res: Response) {

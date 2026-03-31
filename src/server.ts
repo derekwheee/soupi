@@ -1,3 +1,4 @@
+import './env'; // Validate environment variables at startup — throws if any are missing
 import logger from '../utils/logger';
 import app from './app';
 

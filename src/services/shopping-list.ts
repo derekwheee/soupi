@@ -2,9 +2,7 @@ import { ItemCategory } from '@prisma/client';
 
 import prisma from '../../prisma';
 
-export async function getListByCategory(
-    pantryId: number,
-): Promise<ItemCategory[]> {
+export async function getListByCategory(pantryId: number): Promise<ItemCategory[]> {
     return prisma.itemCategory.findMany({
         include: {
             pantryItems: {

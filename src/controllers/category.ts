@@ -24,11 +24,7 @@ export async function updateSortOrder(req: Request, res: Response) {
     return await householdController(req, res, (household: Household) => {
         const body = parseBody(res, UpdateSortOrderSchema, req.body);
         if (!body) return;
-        return categoryService.updateSortOrder(
-            household.id,
-            Number(pantryId),
-            body,
-        );
+        return categoryService.updateSortOrder(household.id, Number(pantryId), body);
     });
 }
 

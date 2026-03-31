@@ -44,7 +44,10 @@ describe('UpsertRecipeSchema', () => {
         expect(result.success).toBe(true);
     });
     it('accepts null nullable fields', () => {
-        expect(UpsertRecipeSchema.safeParse({ cookTime: null, prepTime: null, servings: null }).success).toBe(true);
+        expect(
+            UpsertRecipeSchema.safeParse({ cookTime: null, prepTime: null, servings: null })
+                .success,
+        ).toBe(true);
     });
     it('rejects invalid URL in source', () => {
         expect(UpsertRecipeSchema.safeParse({ source: 'not-a-url' }).success).toBe(false);
@@ -59,7 +62,13 @@ describe('CompleteRecipeSchema', () => {
         expect(CompleteRecipeSchema.safeParse({ recipeId: 1 }).success).toBe(true);
     });
     it('accepts full completion', () => {
-        expect(CompleteRecipeSchema.safeParse({ finishedPantryItems: [1, 2, 3], rating: 4, recipeId: 1 }).success).toBe(true);
+        expect(
+            CompleteRecipeSchema.safeParse({
+                finishedPantryItems: [1, 2, 3],
+                rating: 4,
+                recipeId: 1,
+            }).success,
+        ).toBe(true);
     });
     it('rejects missing recipeId', () => {
         expect(CompleteRecipeSchema.safeParse({ rating: 5 }).success).toBe(false);
@@ -80,22 +89,27 @@ describe('UpsertPantryItemSchema', () => {
         expect(UpsertPantryItemSchema.safeParse({ name: 'Flour' }).success).toBe(true);
     });
     it('accepts full item', () => {
-        expect(UpsertPantryItemSchema.safeParse({
-            categoryId: 2,
-            expiresAt: null,
-            id: 1,
-            isFavorite: false,
-            isInShoppingList: false,
-            isInStock: true,
-            name: 'Flour',
-            purchasedAt: '2024-01-01',
-        }).success).toBe(true);
+        expect(
+            UpsertPantryItemSchema.safeParse({
+                categoryId: 2,
+                expiresAt: null,
+                id: 1,
+                isFavorite: false,
+                isInShoppingList: false,
+                isInStock: true,
+                name: 'Flour',
+                purchasedAt: '2024-01-01',
+            }).success,
+        ).toBe(true);
     });
     it('rejects missing name', () => {
         expect(UpsertPantryItemSchema.safeParse({ isInStock: true }).success).toBe(false);
     });
     it('coerces date strings to Date', () => {
-        const result = UpsertPantryItemSchema.safeParse({ name: 'Eggs', purchasedAt: '2024-06-01' });
+        const result = UpsertPantryItemSchema.safeParse({
+            name: 'Eggs',
+            purchasedAt: '2024-06-01',
+        });
         expect(result.success).toBe(true);
         if (result.success) expect(result.data.purchasedAt).toBeInstanceOf(Date);
     });
@@ -106,7 +120,15 @@ describe('UpsertCategorySchema', () => {
         expect(UpsertCategorySchema.safeParse({ name: 'Dairy' }).success).toBe(true);
     });
     it('accepts full category', () => {
-        expect(UpsertCategorySchema.safeParse({ icon: '🥦', id: 1, isNonFood: false, name: 'Produce', sortOrder: 0 }).success).toBe(true);
+        expect(
+            UpsertCategorySchema.safeParse({
+                icon: '🥦',
+                id: 1,
+                isNonFood: false,
+                name: 'Produce',
+                sortOrder: 0,
+            }).success,
+        ).toBe(true);
     });
     it('rejects missing name', () => {
         expect(UpsertCategorySchema.safeParse({ icon: '🥦' }).success).toBe(false);
@@ -176,7 +198,10 @@ describe('UpdateUserSchema', () => {
 
 describe('JoinHouseholdSchema', () => {
     it('accepts valid UUID', () => {
-        expect(JoinHouseholdSchema.safeParse({ joinToken: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' }).success).toBe(true);
+        expect(
+            JoinHouseholdSchema.safeParse({ joinToken: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' })
+                .success,
+        ).toBe(true);
     });
     it('rejects non-UUID string', () => {
         expect(JoinHouseholdSchema.safeParse({ joinToken: 'not-a-uuid' }).success).toBe(false);

@@ -1,4 +1,4 @@
-import { clerkClient, getAuth } from '@clerk/express'
+import { clerkClient, getAuth } from '@clerk/express';
 import { Request, Response } from 'express';
 
 import { UpdateUserSchema } from '../schemas';
@@ -22,7 +22,7 @@ export async function syncUser(req: Request, res: Response) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const user = await clerkClient.users.getUser(userId)
+    const user = await clerkClient.users.getUser(userId);
 
     return await controller(req, res, () => userService.sync(user));
 }
@@ -37,7 +37,5 @@ export async function updateUser(req: Request, res: Response) {
     const body = parseBody(res, UpdateUserSchema, req.body);
     if (!body) return;
 
-    return await controller(req, res, () =>
-        userService.updateUser(userId, body),
-    );
+    return await controller(req, res, () => userService.updateUser(userId, body));
 }

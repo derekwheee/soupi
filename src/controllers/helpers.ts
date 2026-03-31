@@ -59,11 +59,7 @@ export async function householdController(
         return;
     }
 
-    const household = await hasAccessToHousehold(
-        userId,
-        householdId,
-        skipAccessCheck,
-    );
+    const household = await hasAccessToHousehold(userId, householdId, skipAccessCheck);
 
     if (!household) {
         res.status(403).json({ error: 'Access denied' });
@@ -73,11 +69,7 @@ export async function householdController(
     return await controller(req, res, () => fn(household));
 }
 
-export function parseBody<T>(
-    res: Response,
-    schema: z.ZodType<T>,
-    body: unknown,
-): null | T {
+export function parseBody<T>(res: Response, schema: z.ZodType<T>, body: unknown): null | T {
     const result = schema.safeParse(body);
     if (!result.success) {
         res.status(400).json({

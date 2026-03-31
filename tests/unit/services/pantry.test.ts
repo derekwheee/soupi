@@ -6,10 +6,14 @@ import { prismaMock } from '../../mocks/prisma';
 vi.mock('../../../prisma/index', () => ({ default: prismaMock }));
 vi.mock('../../../utils/sse', () => ({
     addClient: vi.fn(),
-    broadcast: vi.fn(async (_hid: number, _type: unknown, _from: string, cb: () => Promise<unknown>) => cb()),
+    broadcast: vi.fn(
+        async (_hid: number, _type: unknown, _from: string, cb: () => Promise<unknown>) => cb(),
+    ),
 }));
 
-const { getAllPantryItems, getPantries, upsertPantryItem } = await import('../../../src/services/pantry');
+const { getAllPantryItems, getPantries, upsertPantryItem } = await import(
+    '../../../src/services/pantry'
+);
 
 describe('getPantries()', () => {
     it('returns the first pantry for the household', async () => {

@@ -7,11 +7,15 @@ import { prismaMock } from '../../mocks/prisma';
 vi.mock('../../../prisma/index', () => ({ default: prismaMock }));
 vi.mock('../../../utils/sse', () => ({
     addClient: vi.fn(),
-    broadcast: vi.fn(async (_hid: number, _type: unknown, _from: string, cb: () => Promise<unknown>) => cb()),
+    broadcast: vi.fn(
+        async (_hid: number, _type: unknown, _from: string, cb: () => Promise<unknown>) => cb(),
+    ),
 }));
 
 // Import after mocks are set up
-const { completeRecipe, deleteRecipe, getAllRecipes, getRecipe } = await import('../../../src/services/recipe');
+const { completeRecipe, deleteRecipe, getAllRecipes, getRecipe } = await import(
+    '../../../src/services/recipe'
+);
 
 describe('getAllRecipes()', () => {
     it('returns paginated recipes with default page/limit', async () => {

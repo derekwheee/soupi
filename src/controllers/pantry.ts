@@ -21,11 +21,7 @@ export async function getPantries(req: Request, res: Response) {
 export async function getPantryItem(req: Request, res: Response) {
     const { itemId, pantryId } = req.params;
     return await householdController(req, res, (household: Household) =>
-        pantryService.getPantryItem(
-            household.id,
-            Number(pantryId),
-            Number(itemId),
-        ),
+        pantryService.getPantryItem(household.id, Number(pantryId), Number(itemId)),
     );
 }
 

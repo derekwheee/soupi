@@ -27,7 +27,7 @@ export const mockPantryItem: PantryItem = {
     updatedAt: new Date('2024-01-01'),
 };
 
-export const mockPantry: Pantry & { itemCategories: ItemCategory[]; pantryItems: PantryItem[]; } = {
+export const mockPantry: Pantry & { itemCategories: ItemCategory[]; pantryItems: PantryItem[] } = {
     createdAt: new Date('2024-01-01'),
     deletedAt: null,
     householdId: 1,

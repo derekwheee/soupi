@@ -75,11 +75,7 @@ export async function scrapeRecipe(
 
     const recipe = parsed?.object;
 
-    if (
-        !recipe?.ingredients?.length &&
-        parsed?.object?.externalLink &&
-        !isRetry
-    ) {
+    if (!recipe?.ingredients?.length && parsed?.object?.externalLink && !isRetry) {
         return scrapeRecipe(parsed.object.externalLink, { isRetry: true });
     }
 
@@ -99,10 +95,8 @@ export async function scrapeRecipe(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function cleanInstructions(recipeInstructions: any): string[] {
     const instructions = Array.isArray(recipeInstructions)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ? recipeInstructions.map((step: any) =>
-              typeof step === 'string' ? step : step.text,
-          )
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          recipeInstructions.map((step: any) => (typeof step === 'string' ? step : step.text))
         : [];
 
     return instructions
@@ -136,9 +130,7 @@ async function getRecipeFromMeta(page: Page, url: string) {
     return metaTags?.find((tag) => tag.property === 'og:description')?.content;
 }
 
-function parseTimes(
-    time?: null | string | undefined,
-): null | string | undefined {
+function parseTimes(time?: null | string | undefined): null | string | undefined {
     if (!time) return time;
 
     if (time.match(/PT\d+\w+/)) {
@@ -167,9 +159,7 @@ function parseTimes(
 async function parseWebsiteRecipe(page: Page, url: string) {
     // Lots of websites are continuously loading content (thanks ads), so don't wait for networkidle
     // But youtube content isn't fully loaded when DOMContentLoaded fires
-    const waitUntil = url.includes('youtube.com')
-        ? 'networkidle2'
-        : 'domcontentloaded';
+    const waitUntil = url.includes('youtube.com') ? 'networkidle2' : 'domcontentloaded';
 
     await page.goto(url, {
         timeout: 10000,
@@ -180,14 +170,10 @@ async function parseWebsiteRecipe(page: Page, url: string) {
         const matchWords = ['recipe', 'ingredients'];
 
         return Array.from(
-            document.querySelectorAll<HTMLElement>(
-                'script[type="application/ld+json"]',
-            ),
+            document.querySelectorAll<HTMLElement>('script[type="application/ld+json"]'),
         )
             .map((el) => el.innerText)
-            .filter((text) =>
-                matchWords.some((word) => text.toLowerCase().includes(word)),
-            )
+            .filter((text) => matchWords.some((word) => text.toLowerCase().includes(word)))
             .join(',');
     });
 }

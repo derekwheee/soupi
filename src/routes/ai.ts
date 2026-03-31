@@ -7,7 +7,7 @@ const router = Router();
 
 router.get('/suggestions/:pantryId', requireAuth(), async (req, res) => {
     const pantryId = parseInt(req.params.pantryId);
-    const { keywords, tags }: { keywords?: string; tags?: string; } = req.query;
+    const { keywords, tags }: { keywords?: string; tags?: string } = req.query;
 
     const suggestions = await getRecipeSuggestions(pantryId, tags, keywords);
     return res.json(suggestions);

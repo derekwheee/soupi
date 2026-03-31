@@ -18,9 +18,7 @@ export interface RecipeJSON {
     servings?: string;
 }
 
-export async function getExpiringPantryItems(
-    pantryId: number,
-): Promise<PantryItem[]> {
+export async function getExpiringPantryItems(pantryId: number): Promise<PantryItem[]> {
     const itemsToUpdate = await prisma.pantryItem.findMany({
         where: {
             deletedAt: null,
@@ -95,9 +93,7 @@ export async function getExpiringPantryItems(
         where: {
             deletedAt: null,
             expiresAt: {
-                lte: new Date(
-                    today.getTime() + EXPIRATION_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-                ),
+                lte: new Date(today.getTime() + EXPIRATION_WINDOW_DAYS * 24 * 60 * 60 * 1000),
             },
             isInStock: true,
             pantryId,

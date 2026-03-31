@@ -1,4 +1,4 @@
-import { getAuth } from '@clerk/express'
+import { getAuth } from '@clerk/express';
 import { Household } from '@prisma/client';
 import { Request, Response } from 'express';
 
@@ -17,6 +17,6 @@ export async function joinHousehold(req: Request, res: Response) {
         res,
         (household: Household) =>
             houseHoldService.joinHousehold(userId!, household.id, body.joinToken),
-        { skipAccessCheck: true }
+        { skipAccessCheck: true },
     );
 }

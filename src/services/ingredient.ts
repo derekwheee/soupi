@@ -5,18 +5,27 @@ import prisma from '../../prisma';
 import logger from '../../utils/logger';
 
 type RecipeWithJoins = Prisma.RecipeGetPayload<{
-    include: { ingredients: true, tags: true }
+    include: { ingredients: true; tags: true };
 }>;
 
-export async function parseIngredients(recipeId: number, isRetry?: boolean): Promise<RecipeWithJoins>;
-export async function parseIngredients(recipe: RecipeWithJoins, isRetry?: boolean): Promise<RecipeWithJoins>;
-export async function parseIngredients(arg: number | RecipeWithJoins, isRetry?: boolean): Promise<RecipeWithJoins> {
+export async function parseIngredients(
+    recipeId: number,
+    isRetry?: boolean,
+): Promise<RecipeWithJoins>;
+export async function parseIngredients(
+    recipe: RecipeWithJoins,
+    isRetry?: boolean,
+): Promise<RecipeWithJoins>;
+export async function parseIngredients(
+    arg: number | RecipeWithJoins,
+    isRetry?: boolean,
+): Promise<RecipeWithJoins> {
     const recipe: RecipeWithJoins =
         typeof arg === 'number'
             ? await prisma.recipe.findUniqueOrThrow({
-                include: { ingredients: true, tags: true },
-                where: { id: arg },
-            })
+                  include: { ingredients: true, tags: true },
+                  where: { id: arg },
+              })
             : arg;
 
     const ingredientSentences = recipe.ingredients.map(({ sentence }) => sentence);
@@ -33,7 +42,9 @@ export async function parseIngredients(arg: number | RecipeWithJoins, isRetry?: 
 
     if (result.error) {
         logger.error({ err: result.error }, 'Failed to execute NLP parser');
-        throw new Error(`NLP parser process error: ${result.error.message || String(result.error)}`);
+        throw new Error(
+            `NLP parser process error: ${result.error.message || String(result.error)}`,
+        );
     }
 
     if (result.status !== 0) {
@@ -54,7 +65,13 @@ export async function parseIngredients(arg: number | RecipeWithJoins, isRetry?: 
         return parseIngredients(recipe, true);
     }
 
-    let parsedIngredients: Array<{ amount?: { quantity: string; unit: string }[]; name?: { text: string }[]; preparation?: { text: string }; sentence: string; size?: { text: string }; }>;
+    let parsedIngredients: Array<{
+        amount?: { quantity: string; unit: string }[];
+        name?: { text: string }[];
+        preparation?: { text: string };
+        sentence: string;
+        size?: { text: string };
+    }>;
     try {
         parsedIngredients = JSON.parse(result.stdout);
     } catch {
@@ -66,7 +83,9 @@ export async function parseIngredients(arg: number | RecipeWithJoins, isRetry?: 
     }
 
     const ingredients = recipe.ingredients.map((ingredient) => {
-        const parsed = parsedIngredients.find((parsed: { sentence: string }) => parsed.sentence === ingredient.sentence);
+        const parsed = parsedIngredients.find(
+            (parsed: { sentence: string }) => parsed.sentence === ingredient.sentence,
+        );
 
         return {
             ...ingredient,
@@ -75,15 +94,16 @@ export async function parseIngredients(arg: number | RecipeWithJoins, isRetry?: 
             json: parsed,
             preparation: parsed?.preparation?.text,
             size: parsed?.size?.text,
-            unit: parsed?.amount?.[0]?.unit
+            unit: parsed?.amount?.[0]?.unit,
         };
     });
 
     const updates = ingredients.map(({ id, ...ingredient }) =>
         prisma.ingredient.update({
             data: ingredient,
-            where: { id }
-        }));
+            where: { id },
+        }),
+    );
 
     await prisma.$transaction(updates);
 

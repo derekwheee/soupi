@@ -9,6 +9,7 @@ import logger from '../utils/logger';
 import aiRoutes from './routes/ai';
 import categoryRoutes from './routes/category';
 import eventRoutes from './routes/events';
+import healthRoutes from './routes/health';
 import householdRoutes from './routes/household';
 import metaRoutes from './routes/meta';
 import pantryRoutes from './routes/pantry';
@@ -43,6 +44,7 @@ app.use(pinoHttp({ logger }));
 app.use(clerkMiddleware({ debug: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/health', healthRoutes);
 app.use('/meta', metaRoutes);
 app.use('/user', generalRateLimit, userRoutes);
 app.use('/', generalRateLimit, householdRoutes);

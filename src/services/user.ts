@@ -28,10 +28,10 @@ export async function createUser(user: ClerkUser): Promise<User> {
                                 planDays: {
                                     create: {
                                         date: null,
-                                    }
-                                }
-                            }
-                        }
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
                 id: user.id,
@@ -91,10 +91,7 @@ export async function sync(user: ClerkUser): Promise<User> {
     );
 }
 
-export async function updateUser(
-    id: string,
-    patch: Partial<User>,
-): Promise<User> {
+export async function updateUser(id: string, patch: Partial<User>): Promise<User> {
     return await broadcast(
         (await getById(id))!.defaultHouseholdId!,
         SSEMessageType.USER_UPDATE,
@@ -107,9 +104,7 @@ export async function updateUser(
             }
 
             if ('clerkId' in patch || 'email' in patch || 'name' in patch) {
-                throw new Error(
-                    'Use `userService.sync` to update clerk parameters',
-                );
+                throw new Error('Use `userService.sync` to update clerk parameters');
             }
 
             return prisma.user.update({

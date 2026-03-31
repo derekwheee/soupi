@@ -5,7 +5,9 @@ import { prismaMock } from '../../mocks/prisma';
 
 vi.mock('../../../prisma/index', () => ({ default: prismaMock }));
 
-const { addPlanDay, addRecipesToPlanDay, createPlan, getPlan, removePlanDay } = await import('../../../src/services/plan');
+const { addPlanDay, addRecipesToPlanDay, createPlan, getPlan, removePlanDay } = await import(
+    '../../../src/services/plan'
+);
 
 describe('createPlan()', () => {
     it('creates plan and planDay atomically in a transaction', async () => {

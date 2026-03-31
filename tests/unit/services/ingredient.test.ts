@@ -40,19 +40,36 @@ describe('parseIngredients() — error paths', () => {
     });
 
     it('throws when spawnSync returns an error', async () => {
-        spawnSyncMock.mockReturnValue({ error: new Error('spawn ENOENT'), status: null, stderr: '', stdout: '' });
+        spawnSyncMock.mockReturnValue({
+            error: new Error('spawn ENOENT'),
+            status: null,
+            stderr: '',
+            stdout: '',
+        });
 
-        await expect(parseIngredients(mockRecipe)).rejects.toThrow('NLP parser process error: spawn ENOENT');
+        await expect(parseIngredients(mockRecipe)).rejects.toThrow(
+            'NLP parser process error: spawn ENOENT',
+        );
     });
 
     it('throws when exit code is non-zero', async () => {
-        spawnSyncMock.mockReturnValue({ error: null, status: 1, stderr: 'SyntaxError: bad code', stdout: '' });
+        spawnSyncMock.mockReturnValue({
+            error: null,
+            status: 1,
+            stderr: 'SyntaxError: bad code',
+            stdout: '',
+        });
 
         await expect(parseIngredients(mockRecipe)).rejects.toThrow('NLP parser exited with code 1');
     });
 
     it('includes stderr in non-zero exit error message', async () => {
-        spawnSyncMock.mockReturnValue({ error: null, status: 2, stderr: 'ImportError: no module', stdout: '' });
+        spawnSyncMock.mockReturnValue({
+            error: null,
+            status: 2,
+            stderr: 'ImportError: no module',
+            stdout: '',
+        });
 
         await expect(parseIngredients(mockRecipe)).rejects.toThrow('ImportError: no module');
     });
@@ -64,22 +81,41 @@ describe('parseIngredients() — error paths', () => {
     });
 
     it('throws when stdout is invalid JSON', async () => {
-        spawnSyncMock.mockReturnValue({ error: null, status: 0, stderr: '', stdout: 'not json {{{' });
+        spawnSyncMock.mockReturnValue({
+            error: null,
+            status: 0,
+            stderr: '',
+            stdout: 'not json {{{',
+        });
 
-        await expect(parseIngredients(mockRecipe)).rejects.toThrow('NLP parser returned invalid JSON');
+        await expect(parseIngredients(mockRecipe)).rejects.toThrow(
+            'NLP parser returned invalid JSON',
+        );
     });
 
     it('throws when stdout is valid JSON but not an array', async () => {
-        spawnSyncMock.mockReturnValue({ error: null, status: 0, stderr: '', stdout: '{"result": true}' });
+        spawnSyncMock.mockReturnValue({
+            error: null,
+            status: 0,
+            stderr: '',
+            stdout: '{"result": true}',
+        });
 
-        await expect(parseIngredients(mockRecipe)).rejects.toThrow('NLP parser returned unexpected output format');
+        await expect(parseIngredients(mockRecipe)).rejects.toThrow(
+            'NLP parser returned unexpected output format',
+        );
     });
 });
 
 describe('parseIngredients() — retry logic', () => {
     it('retries once when stdout starts with "Downloading"', async () => {
         spawnSyncMock
-            .mockReturnValueOnce({ error: null, status: 0, stderr: '', stdout: 'Downloading model...' })
+            .mockReturnValueOnce({
+                error: null,
+                status: 0,
+                stderr: '',
+                stdout: 'Downloading model...',
+            })
             .mockReturnValueOnce({ error: null, status: 0, stderr: '', stdout: validParsedOutput });
 
         prismaMock.$transaction.mockResolvedValue([]);
@@ -91,7 +127,12 @@ describe('parseIngredients() — retry logic', () => {
     });
 
     it('throws on second "Downloading" without infinite loop', async () => {
-        spawnSyncMock.mockReturnValue({ error: null, status: 0, stderr: '', stdout: 'Downloading model...' });
+        spawnSyncMock.mockReturnValue({
+            error: null,
+            status: 0,
+            stderr: '',
+            stdout: 'Downloading model...',
+        });
 
         await expect(parseIngredients(mockRecipe)).rejects.toThrow(
             'NLP model is still downloading, please try again later',
@@ -102,7 +143,12 @@ describe('parseIngredients() — retry logic', () => {
 
 describe('parseIngredients() — success path', () => {
     it('parses output and updates all ingredients in a transaction', async () => {
-        spawnSyncMock.mockReturnValue({ error: null, status: 0, stderr: '', stdout: validParsedOutput });
+        spawnSyncMock.mockReturnValue({
+            error: null,
+            status: 0,
+            stderr: '',
+            stdout: validParsedOutput,
+        });
         prismaMock.ingredient.update.mockResolvedValue(mockIngredient);
         prismaMock.$transaction.mockResolvedValue([mockIngredient]);
         prismaMock.recipe.findUniqueOrThrow.mockResolvedValue(mockRecipe as any);
@@ -120,7 +166,12 @@ describe('parseIngredients() — success path', () => {
         prismaMock.recipe.findUniqueOrThrow
             .mockResolvedValueOnce(mockRecipe as any) // initial fetch by id
             .mockResolvedValueOnce(mockRecipe as any); // final fetch after updates
-        spawnSyncMock.mockReturnValue({ error: null, status: 0, stderr: '', stdout: validParsedOutput });
+        spawnSyncMock.mockReturnValue({
+            error: null,
+            status: 0,
+            stderr: '',
+            stdout: validParsedOutput,
+        });
         prismaMock.$transaction.mockResolvedValue([]);
 
         await parseIngredients(1);

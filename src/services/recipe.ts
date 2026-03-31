@@ -107,26 +107,18 @@ export async function createRecipeFromUrl(
     return upsertRecipe(householdId, recipe);
 }
 
-export async function deleteRecipe(
-    householdId: number,
-    id: number,
-): Promise<void> {
-    broadcast<void>(
-        householdId,
-        SSEMessageType.RECIPE_DELETE,
-        'deleteRecipe',
-        async () => {
-            await prisma.recipe.update({
-                data: { deletedAt: new Date() },
-                where: { householdId, id },
-            });
-        },
-    );
+export async function deleteRecipe(householdId: number, id: number): Promise<void> {
+    broadcast<void>(householdId, SSEMessageType.RECIPE_DELETE, 'deleteRecipe', async () => {
+        await prisma.recipe.update({
+            data: { deletedAt: new Date() },
+            where: { householdId, id },
+        });
+    });
 }
 
 export async function getAllRecipes(
     householdId: number,
-    { limit = 50, page = 1 }: { limit?: number; page?: number; } = {},
+    { limit = 50, page = 1 }: { limit?: number; page?: number } = {},
 ): Promise<RecipeWithJoins[]> {
     return prisma.recipe.findMany({
         include: {
@@ -147,10 +139,7 @@ export async function getAllRecipeTags(householdId: number) {
     });
 }
 
-export async function getRecipe(
-    householdId: number,
-    id: number,
-): Promise<RecipeWithJoins> {
+export async function getRecipe(householdId: number, id: number): Promise<RecipeWithJoins> {
     return prisma.recipe.findUniqueOrThrow({
         include: {
             ingredients: { orderBy: { id: 'asc' } },

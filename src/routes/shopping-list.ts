@@ -1,8 +1,6 @@
 import { Router } from 'express';
 
-import {
-    getListByCategory,
-} from '../controllers/shopping-list';
+import { getListByCategory } from '../controllers/shopping-list';
 import requireAuth from '../middleware/require-auth';
 
 const router = Router();
