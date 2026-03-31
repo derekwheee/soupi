@@ -7,8 +7,8 @@ const EnvSchema = z.object({
     DATABASE_URL: z.string().url(),
     HOST: z.string().default('0.0.0.0'),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
-    NLP_PARSER_PATH: z.string().min(1),
-    NLP_PYTHON_PATH: z.string().min(1),
+    NLP_PARSER_PATH: z.string().min(1).optional(),
+    NLP_PYTHON_PATH: z.string().min(1).optional(),
     OPENAI_API_KEY: z.string().min(1),
     PORT: z.coerce.number().int().positive().default(3000),
 });
