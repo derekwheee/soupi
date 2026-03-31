@@ -5,9 +5,14 @@ import { prismaMock } from '../../mocks/prisma';
 
 vi.mock('../../../prisma/index', () => ({ default: prismaMock }));
 
-const { addPlanDay, addRecipesToPlanDay, createPlan, getPlan, removePlanDay } = await import(
-    '../../../src/services/plan'
-);
+const {
+    addPlanDay,
+    addRecipesToPlanDay,
+    createPlan,
+    getPlan,
+    removePlanDay,
+    removeRecipeFromPlanDay,
+} = await import('../../../src/services/plan');
 
 describe('createPlan()', () => {
     it('creates plan and planDay atomically in a transaction', async () => {
@@ -98,6 +103,19 @@ describe('addRecipesToPlanDay()', () => {
                     connect: [{ id: 10 }, { id: 11 }],
                 },
             },
+            where: { id: 1 },
+        });
+    });
+});
+
+describe('removeRecipeFromPlanDay()', () => {
+    it('disconnects the recipe from the plan day', async () => {
+        prismaMock.planDay.update.mockResolvedValue(mockPlanDay as any);
+
+        await removeRecipeFromPlanDay({ planDayId: 1, recipeId: 42 });
+
+        expect(prismaMock.planDay.update).toHaveBeenCalledWith({
+            data: { recipes: { disconnect: { id: 42 } } },
             where: { id: 1 },
         });
     });

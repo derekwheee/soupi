@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { mockRecipe, mockRecipe2 } from '../../fixtures/recipe';
+import { mockRecipe, mockRecipe2, mockTag } from '../../fixtures/recipe';
 import '../../mocks/broadcast';
 import { prismaMock } from '../../mocks/prisma';
 
@@ -11,11 +11,86 @@ vi.mock('../../../utils/sse', () => ({
         async (_hid: number, _type: unknown, _from: string, cb: () => Promise<unknown>) => cb(),
     ),
 }));
+vi.mock('../../../src/services/ingredient', () => ({
+    parseIngredients: vi.fn().mockResolvedValue(mockRecipe),
+}));
+vi.mock('../../../src/services/scraper', () => ({
+    scrapeRecipe: vi.fn(),
+}));
 
 // Import after mocks are set up
-const { completeRecipe, deleteRecipe, getAllRecipes, getRecipe } = await import(
-    '../../../src/services/recipe'
-);
+const {
+    completeRecipe,
+    createRecipeFromUrl,
+    deleteRecipe,
+    getAllRecipes,
+    getAllRecipeTags,
+    getRecipe,
+    upsertRecipe,
+} = await import('../../../src/services/recipe');
+
+describe('getAllRecipeTags()', () => {
+    it('returns tags for a household ordered by name', async () => {
+        prismaMock.recipeTag.findMany.mockResolvedValue([mockTag]);
+
+        const result = await getAllRecipeTags(1);
+
+        expect(prismaMock.recipeTag.findMany).toHaveBeenCalledWith(
+            expect.objectContaining({ orderBy: { name: 'asc' } }),
+        );
+        expect(result).toEqual([mockTag]);
+    });
+});
+
+describe('upsertRecipe()', () => {
+    it('creates a new recipe when no id is provided', async () => {
+        prismaMock.recipe.create.mockResolvedValue(mockRecipe);
+        prismaMock.recipe.findUniqueOrThrow.mockResolvedValue(mockRecipe);
+        prismaMock.$transaction.mockResolvedValue([]);
+
+        await upsertRecipe(1, { ingredients: ['1 cup flour'], name: 'Pancakes' });
+
+        expect(prismaMock.recipe.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({ householdId: 1, name: 'Pancakes' }),
+            }),
+        );
+    });
+
+    it('updates an existing recipe when id is provided', async () => {
+        prismaMock.recipe.update.mockResolvedValue(mockRecipe);
+        prismaMock.recipe.findUniqueOrThrow.mockResolvedValue(mockRecipe);
+        prismaMock.$transaction.mockResolvedValue([]);
+
+        await upsertRecipe(1, { id: 1, name: 'Updated Pancakes' });
+
+        expect(prismaMock.recipe.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+                where: { householdId: 1, id: 1 },
+            }),
+        );
+    });
+
+    it('connects or creates tags on upsert', async () => {
+        prismaMock.recipe.create.mockResolvedValue(mockRecipe);
+        prismaMock.recipe.findUniqueOrThrow.mockResolvedValue(mockRecipe);
+        prismaMock.$transaction.mockResolvedValue([]);
+
+        await upsertRecipe(1, { name: 'Tagged Recipe', tags: [{ name: 'vegan' }] });
+
+        expect(prismaMock.recipe.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    tags: expect.objectContaining({
+                        connectOrCreate: expect.arrayContaining([
+                            expect.objectContaining({ create: { householdId: 1, name: 'vegan' } }),
+                        ]),
+                    }),
+                }),
+            }),
+        );
+    });
+});
 
 describe('getAllRecipes()', () => {
     it('returns paginated recipes with default page/limit', async () => {
@@ -142,6 +217,44 @@ describe('completeRecipe()', () => {
         expect(prismaMock.pantryItem.update).toHaveBeenCalledWith(
             expect.objectContaining({
                 data: expect.objectContaining({ isInShoppingList: true }),
+            }),
+        );
+    });
+});
+
+describe('createRecipeFromUrl()', () => {
+    it('throws when scraper returns null', async () => {
+        const { scrapeRecipe } = await import('../../../src/services/scraper');
+        vi.mocked(scrapeRecipe).mockResolvedValue(null);
+
+        await expect(createRecipeFromUrl(1, 'https://example.com/recipe')).rejects.toThrow(
+            'Failed to scrape recipe from URL',
+        );
+    });
+
+    it('creates recipe from scraped data including ISO duration parsing', async () => {
+        const { scrapeRecipe } = await import('../../../src/services/scraper');
+        vi.mocked(scrapeRecipe).mockResolvedValue({
+            cookTime: 'PT30M',
+            ingredients: ['1 cup flour'],
+            instructions: ['Mix ingredients'],
+            name: 'Scraped Cake',
+            prepTime: 'PT90M',
+            servings: '4',
+        } as never);
+        prismaMock.recipe.create.mockResolvedValue(mockRecipe);
+        prismaMock.recipe.findUniqueOrThrow.mockResolvedValue(mockRecipe);
+        prismaMock.$transaction.mockResolvedValue([]);
+
+        await createRecipeFromUrl(1, 'https://example.com/recipe');
+
+        expect(prismaMock.recipe.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    cookTime: '30 mins',
+                    prepTime: '1 hour 30 mins',
+                    source: 'https://example.com/recipe',
+                }),
             }),
         );
     });

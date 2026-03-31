@@ -12,7 +12,7 @@ vi.mock('../../../utils/sse', () => ({
     ),
 }));
 
-const { getCategories, updateSortOrder, upsertCategory } = await import(
+const { getCategories, getCategory, updateSortOrder, upsertCategory } = await import(
     '../../../src/services/category'
 );
 
@@ -113,5 +113,24 @@ describe('updateSortOrder()', () => {
 
         const txArg = (prismaMock.$transaction as any).mock.calls[0][0];
         expect(txArg).toHaveLength(0);
+    });
+});
+
+describe('getCategory()', () => {
+    it('returns a category by pantryId and categoryId', async () => {
+        prismaMock.itemCategory.findFirstOrThrow.mockResolvedValue(mockCategory);
+
+        const result = await getCategory(1, 1);
+
+        expect(prismaMock.itemCategory.findFirstOrThrow).toHaveBeenCalledWith({
+            where: { id: 1, pantryId: 1 },
+        });
+        expect(result).toEqual(mockCategory);
+    });
+
+    it('throws when category is not found', async () => {
+        prismaMock.itemCategory.findFirstOrThrow.mockRejectedValue(new Error('Not found'));
+
+        await expect(getCategory(1, 999)).rejects.toThrow('Not found');
     });
 });

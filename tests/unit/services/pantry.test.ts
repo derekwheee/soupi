@@ -11,7 +11,7 @@ vi.mock('../../../utils/sse', () => ({
     ),
 }));
 
-const { getAllPantryItems, getPantries, upsertPantryItem } = await import(
+const { getAllPantryItems, getPantries, getPantryItem, upsertPantryItem } = await import(
     '../../../src/services/pantry'
 );
 
@@ -89,5 +89,24 @@ describe('upsertPantryItem()', () => {
         prismaMock.pantry.findUniqueOrThrow.mockRejectedValue(new Error('Pantry not found'));
 
         await expect(upsertPantryItem(99, baseItem)).rejects.toThrow('Pantry not found');
+    });
+});
+
+describe('getPantryItem()', () => {
+    it('returns a pantry item by householdId, pantryId, and itemId', async () => {
+        prismaMock.pantryItem.findUniqueOrThrow.mockResolvedValue(mockPantryItem as any);
+
+        const result = await getPantryItem(1, 1, 1);
+
+        expect(prismaMock.pantryItem.findUniqueOrThrow).toHaveBeenCalledWith(
+            expect.objectContaining({ where: { id: 1, pantry: { householdId: 1 }, pantryId: 1 } }),
+        );
+        expect(result).toEqual(mockPantryItem);
+    });
+
+    it('throws when item is not found', async () => {
+        prismaMock.pantryItem.findUniqueOrThrow.mockRejectedValue(new Error('Not found'));
+
+        await expect(getPantryItem(1, 1, 999)).rejects.toThrow('Not found');
     });
 });
