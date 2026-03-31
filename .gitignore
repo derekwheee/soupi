@@ -6,3 +6,4 @@ python/venv/
 python/__pycache__/
 python/*.pyc
 .DS_Store
+coverage/

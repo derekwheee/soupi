@@ -1,0 +1,15 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "types": ["node", "vitest/globals"]
+    },
+    "include": [
+        "src/**/*.ts",
+        "utils/**/*.ts",
+        "prisma/**/*.ts",
+        "tests/**/*.ts",
+        "types/**/*.d.ts"
+    ]
+}

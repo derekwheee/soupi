@@ -1,0 +1,186 @@
+import { describe, it, expect } from 'vitest';
+import {
+    UpsertRecipeSchema,
+    CompleteRecipeSchema,
+    UpsertPantryItemSchema,
+    UpsertCategorySchema,
+    UpdateSortOrderSchema,
+    AddPlanDaySchema,
+    AddRecipesToPlanDaySchema,
+    UpdateUserSchema,
+    JoinHouseholdSchema,
+    RecipeTagSchema,
+} from '../../src/schemas/index';
+
+describe('RecipeTagSchema', () => {
+    it('accepts valid tag', () => {
+        expect(RecipeTagSchema.safeParse({ id: 1, name: 'vegetarian' }).success).toBe(true);
+    });
+    it('rejects missing name', () => {
+        expect(RecipeTagSchema.safeParse({ id: 1 }).success).toBe(false);
+    });
+    it('rejects non-positive id', () => {
+        expect(RecipeTagSchema.safeParse({ id: 0, name: 'x' }).success).toBe(false);
+    });
+});
+
+describe('UpsertRecipeSchema', () => {
+    it('accepts empty object (all fields optional)', () => {
+        expect(UpsertRecipeSchema.safeParse({}).success).toBe(true);
+    });
+    it('accepts full valid recipe', () => {
+        const result = UpsertRecipeSchema.safeParse({
+            id: 1,
+            name: 'Pasta',
+            prepTime: '10 mins',
+            cookTime: '20 mins',
+            servings: '4',
+            instructions: ['Boil water', 'Cook pasta'],
+            ingredients: ['200g pasta', '1 tsp salt'],
+            tags: [{ id: 1, name: 'italian' }],
+            source: 'https://example.com/pasta',
+        });
+        expect(result.success).toBe(true);
+    });
+    it('accepts null nullable fields', () => {
+        expect(UpsertRecipeSchema.safeParse({ prepTime: null, cookTime: null, servings: null }).success).toBe(true);
+    });
+    it('rejects invalid URL in source', () => {
+        expect(UpsertRecipeSchema.safeParse({ source: 'not-a-url' }).success).toBe(false);
+    });
+    it('rejects non-array instructions', () => {
+        expect(UpsertRecipeSchema.safeParse({ instructions: 'do it' }).success).toBe(false);
+    });
+});
+
+describe('CompleteRecipeSchema', () => {
+    it('accepts recipeId only', () => {
+        expect(CompleteRecipeSchema.safeParse({ recipeId: 1 }).success).toBe(true);
+    });
+    it('accepts full completion', () => {
+        expect(CompleteRecipeSchema.safeParse({ recipeId: 1, rating: 4, finishedPantryItems: [1, 2, 3] }).success).toBe(true);
+    });
+    it('rejects missing recipeId', () => {
+        expect(CompleteRecipeSchema.safeParse({ rating: 5 }).success).toBe(false);
+    });
+    it('rejects rating above 5', () => {
+        expect(CompleteRecipeSchema.safeParse({ recipeId: 1, rating: 6 }).success).toBe(false);
+    });
+    it('rejects rating below 0', () => {
+        expect(CompleteRecipeSchema.safeParse({ recipeId: 1, rating: -1 }).success).toBe(false);
+    });
+    it('rejects non-integer rating', () => {
+        expect(CompleteRecipeSchema.safeParse({ recipeId: 1, rating: 4.5 }).success).toBe(false);
+    });
+});
+
+describe('UpsertPantryItemSchema', () => {
+    it('accepts minimal item', () => {
+        expect(UpsertPantryItemSchema.safeParse({ name: 'Flour' }).success).toBe(true);
+    });
+    it('accepts full item', () => {
+        expect(UpsertPantryItemSchema.safeParse({
+            id: 1,
+            name: 'Flour',
+            isInStock: true,
+            isFavorite: false,
+            isInShoppingList: false,
+            purchasedAt: '2024-01-01',
+            expiresAt: null,
+            categoryId: 2,
+        }).success).toBe(true);
+    });
+    it('rejects missing name', () => {
+        expect(UpsertPantryItemSchema.safeParse({ isInStock: true }).success).toBe(false);
+    });
+    it('coerces date strings to Date', () => {
+        const result = UpsertPantryItemSchema.safeParse({ name: 'Eggs', purchasedAt: '2024-06-01' });
+        expect(result.success).toBe(true);
+        if (result.success) expect(result.data.purchasedAt).toBeInstanceOf(Date);
+    });
+});
+
+describe('UpsertCategorySchema', () => {
+    it('accepts minimal category', () => {
+        expect(UpsertCategorySchema.safeParse({ name: 'Dairy' }).success).toBe(true);
+    });
+    it('accepts full category', () => {
+        expect(UpsertCategorySchema.safeParse({ id: 1, name: 'Produce', icon: '🥦', sortOrder: 0, isNonFood: false }).success).toBe(true);
+    });
+    it('rejects missing name', () => {
+        expect(UpsertCategorySchema.safeParse({ icon: '🥦' }).success).toBe(false);
+    });
+    it('rejects negative sortOrder', () => {
+        expect(UpsertCategorySchema.safeParse({ name: 'X', sortOrder: -1 }).success).toBe(false);
+    });
+});
+
+describe('UpdateSortOrderSchema', () => {
+    it('accepts array of positive integers', () => {
+        expect(UpdateSortOrderSchema.safeParse([3, 1, 2]).success).toBe(true);
+    });
+    it('accepts empty array', () => {
+        expect(UpdateSortOrderSchema.safeParse([]).success).toBe(true);
+    });
+    it('rejects non-array', () => {
+        expect(UpdateSortOrderSchema.safeParse({ ids: [1, 2] }).success).toBe(false);
+    });
+    it('rejects array with non-positive integer', () => {
+        expect(UpdateSortOrderSchema.safeParse([1, 0, 2]).success).toBe(false);
+    });
+});
+
+describe('AddPlanDaySchema', () => {
+    it('accepts valid planId and date string', () => {
+        const result = AddPlanDaySchema.safeParse({ planId: 1, date: '2024-06-15' });
+        expect(result.success).toBe(true);
+        if (result.success) expect(result.data.date).toBeInstanceOf(Date);
+    });
+    it('accepts Date object directly', () => {
+        expect(AddPlanDaySchema.safeParse({ planId: 1, date: new Date() }).success).toBe(true);
+    });
+    it('rejects missing planId', () => {
+        expect(AddPlanDaySchema.safeParse({ date: '2024-06-15' }).success).toBe(false);
+    });
+    it('rejects missing date', () => {
+        expect(AddPlanDaySchema.safeParse({ planId: 1 }).success).toBe(false);
+    });
+});
+
+describe('AddRecipesToPlanDaySchema', () => {
+    it('accepts array of positive integers', () => {
+        expect(AddRecipesToPlanDaySchema.safeParse([1, 2, 3]).success).toBe(true);
+    });
+    it('rejects array with zero', () => {
+        expect(AddRecipesToPlanDaySchema.safeParse([0]).success).toBe(false);
+    });
+    it('rejects non-array', () => {
+        expect(AddRecipesToPlanDaySchema.safeParse(1).success).toBe(false);
+    });
+});
+
+describe('UpdateUserSchema', () => {
+    it('accepts valid themePreference values', () => {
+        expect(UpdateUserSchema.safeParse({ themePreference: 'light' }).success).toBe(true);
+        expect(UpdateUserSchema.safeParse({ themePreference: 'dark' }).success).toBe(true);
+        expect(UpdateUserSchema.safeParse({ themePreference: 'system' }).success).toBe(true);
+    });
+    it('accepts empty object', () => {
+        expect(UpdateUserSchema.safeParse({}).success).toBe(true);
+    });
+    it('rejects invalid themePreference', () => {
+        expect(UpdateUserSchema.safeParse({ themePreference: 'auto' }).success).toBe(false);
+    });
+});
+
+describe('JoinHouseholdSchema', () => {
+    it('accepts valid UUID', () => {
+        expect(JoinHouseholdSchema.safeParse({ joinToken: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' }).success).toBe(true);
+    });
+    it('rejects non-UUID string', () => {
+        expect(JoinHouseholdSchema.safeParse({ joinToken: 'not-a-uuid' }).success).toBe(false);
+    });
+    it('rejects missing joinToken', () => {
+        expect(JoinHouseholdSchema.safeParse({}).success).toBe(false);
+    });
+});
