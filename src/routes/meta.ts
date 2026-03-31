@@ -1,17 +1,17 @@
 import { Router } from 'express';
-import { controller } from '../controllers/helpers';
+
 import PackageJson from '../../package.json';
+import { handle } from '../middleware/handle';
 
 const router = Router();
 
-router.get('/', (res, req) =>
-    controller(res, req, () => {
-        return {
-            name: 'soupi',
-            version: PackageJson.version,
-            status: 'ok',
-        };
-    }),
+router.get(
+    '/',
+    handle(async () => ({
+        name: 'soupi',
+        status: 'ok',
+        version: PackageJson.version,
+    })),
 );
 
 export default router;

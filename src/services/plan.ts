@@ -1,60 +1,18 @@
 import { Plan } from '@prisma/client';
+
 import prisma from '../../prisma';
-
-export async function createPlan(householdId: number): Promise<Plan> {
-    const plan = await prisma.plan.create({
-        data: {
-            household: { connect: { id: householdId } },
-        },
-    });
-
-    await prisma.planDay.create({
-        data: {
-            // Create a plan day with an explicit null date
-            // This is the "upcoming" plan day
-            date: null,
-            plan: {
-                connect: { id: plan.id },
-            },
-        },
-    });
-
-    return plan;
-}
-
-export async function getPlan(householdId: number): Promise<Plan> {
-    return prisma.plan.findFirstOrThrow({
-        where: {
-            householdId,
-            deletedAt: null,
-        },
-        include: {
-            planDays: {
-                where: { deletedAt: null },
-                include: {
-                    recipes: {
-                        include: {
-                            ingredients: true,
-                        },
-                    },
-                },
-            },
-        },
-    });
-}
 
 export async function addPlanDay(
     householdId: number,
     {
-        planId,
         date,
+        planId,
     }: {
-        planId: number;
         date: Date;
+        planId: number;
     },
 ): Promise<Plan> {
     return prisma.plan.update({
-        where: { id: planId, householdId },
         data: {
             planDays: {
                 create: {
@@ -64,19 +22,11 @@ export async function addPlanDay(
         },
         include: {
             planDays: {
-                where: { deletedAt: null },
                 include: { recipes: true },
+                where: { deletedAt: null },
             },
         },
-    });
-}
-
-export async function removePlanDay(planDayId: number): Promise<void> {
-    await prisma.planDay.update({
-        where: { id: planDayId },
-        data: {
-            deletedAt: new Date(),
-        },
+        where: { householdId, id: planId },
     });
 }
 
@@ -88,12 +38,65 @@ export async function addRecipesToPlanDay({
     recipeIds: number[];
 }): Promise<void> {
     await prisma.planDay.update({
-        where: { id: planDayId },
         data: {
             recipes: {
                 connect: recipeIds.map((id) => ({ id })),
             },
         },
+        where: { id: planDayId },
+    });
+}
+
+export async function createPlan(householdId: number): Promise<Plan> {
+    return prisma.$transaction(async (tx) => {
+        const plan = await tx.plan.create({
+            data: {
+                household: { connect: { id: householdId } },
+            },
+        });
+
+        await tx.planDay.create({
+            data: {
+                // Create a plan day with an explicit null date
+                // This is the "upcoming" plan day
+                date: null,
+                plan: {
+                    connect: { id: plan.id },
+                },
+            },
+        });
+
+        return plan;
+    });
+}
+
+export async function getPlan(householdId: number): Promise<Plan> {
+    return prisma.plan.findFirstOrThrow({
+        include: {
+            planDays: {
+                include: {
+                    recipes: {
+                        include: {
+                            ingredients: true,
+                        },
+                    },
+                },
+                where: { deletedAt: null },
+            },
+        },
+        where: {
+            deletedAt: null,
+            householdId,
+        },
+    });
+}
+
+export async function removePlanDay(planDayId: number): Promise<void> {
+    await prisma.planDay.update({
+        data: {
+            deletedAt: new Date(),
+        },
+        where: { id: planDayId },
     });
 }
 
@@ -105,11 +108,11 @@ export async function removeRecipeFromPlanDay({
     recipeId: number;
 }): Promise<void> {
     await prisma.planDay.update({
-        where: { id: planDayId },
         data: {
             recipes: {
                 disconnect: { id: recipeId },
             },
         },
+        where: { id: planDayId },
     });
 }
