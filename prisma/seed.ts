@@ -1,11 +1,10 @@
 import { Prisma, PrismaClient } from '@prisma/client';
-import { withAccelerate } from '@prisma/extension-accelerate';
 
 import { parseIngredients } from '../src/services/ingredient';
 import { createRecipeFromUrl } from '../src/services/recipe';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../utils/constants';
 
-const prisma = new PrismaClient().$extends(withAccelerate());
+const prisma = new PrismaClient();
 
 async function main() {
     console.log(`Start seeding ...`);
