@@ -53,8 +53,13 @@ COPY ./prisma/schema ./dist/prisma/schema
 RUN npm install -g prisma@6
 RUN cd dist && prisma generate --no-engine
 
-# Railway uses PORT env variable
+# Set after the build so npm ci still installs devDependencies above.
+ENV NODE_ENV=production
 ENV PORT=8080
 
-# Default command (adjust as needed)
+# Drop root: run as an unprivileged user (Chromium launches with --no-sandbox).
+RUN useradd --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app /opt/venv
+USER appuser
+
 CMD ["node", "dist/src/server.js"]

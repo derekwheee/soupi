@@ -21,6 +21,10 @@ import userRoutes from './routes/user';
 
 const app = express();
 
+// Behind the Cloudflare Tunnel / reverse proxy, trust one hop so req.ip and
+// rate limiting key off the real client IP (via X-Forwarded-For).
+app.set('trust proxy', 1);
+
 // Strict rate limit for AI endpoints (OpenAI cost protection)
 const aiRateLimit = rateLimit({
     legacyHeaders: false,
@@ -39,7 +43,12 @@ const generalRateLimit = rateLimit({
     windowMs: 15 * 60 * 1000,
 });
 
-app.use(cors());
+// Restrict CORS to an allowlist when CORS_ORIGINS is set; otherwise allow all (dev).
+const corsOrigins = process.env.CORS_ORIGINS?.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+app.use(cors(corsOrigins?.length ? { origin: corsOrigins } : {}));
 app.use(express.json());
 app.use(pinoHttp({ logger }));
 app.use(clerkMiddleware({ debug: true }));
