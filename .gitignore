@@ -1,9 +1,23 @@
 node_modules/
 dist/
-*.env*
+coverage/
+
+# Env files — keep the tracked template, ignore real ones (.env, .env-docker, .env.local, …)
+.env*
+!.env.example
+
+*.log
+.DS_Store
+
+# Editor — keep shared project settings, ignore everything else
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Local scratch
 stash/
+
+# Python
 python/venv/
 python/__pycache__/
 python/*.pyc
-.DS_Store
-coverage/
