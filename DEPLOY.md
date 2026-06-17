@@ -48,8 +48,10 @@ SRC='postgres://USER:PASSWORD@db.prisma.io:5432/DBNAME?sslmode=require' \
   docker run --rm -e SRC postgres:17-alpine \
   sh -c 'pg_dump "$SRC" --no-owner --no-privileges' > soupi_dev.sql
 
-# Load it into the self-hosted db (creates schema, data, and _prisma_migrations)
-docker exec -i soupi_dev_db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < soupi_dev.sql
+# Load it into the self-hosted db (creates schema, data, and _prisma_migrations).
+# Pass the user/db from .env.<env> as LITERALS — POSTGRES_* aren't in your shell
+# unless you export them (empty -> psql tries to connect as "root").
+docker exec -i soupi_dev_db psql -U soupi -d soupi_dev < soupi_dev.sql
 ```
 
 Then bring up the full stack — `prisma migrate deploy` runs on start
@@ -68,6 +70,14 @@ Verify, then set the tunnel ingress to `http://soupi_<env>_api:8080`:
 curl http://127.0.0.1:8080/health     # {"db":"ok","status":"ok"}  (use API_PORT)
 docker compose --env-file .env.dev logs -f api
 ```
+
+In Cloudflare Zero Trust, the tunnel's public hostname ingress points at
+`http://soupi_<env>_api:8080`.
+
+> **Use single-level tunnel hostnames** (e.g. `soupi-dev.<domain>`). Cloudflare
+> Universal SSL only covers `<domain>` and `*.<domain>` — deeper names like
+> `dev.api.soupi.<domain>` fail TLS (`ERR_SSL_VERSION_OR_CIPHER_MISMATCH`) unless
+> you add Advanced Certificate Manager.
 
 ## Operations
 
