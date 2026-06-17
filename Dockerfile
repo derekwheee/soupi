@@ -51,7 +51,8 @@ RUN npm run build
 COPY ./prisma/schema ./dist/prisma/schema
 
 RUN npm install -g prisma@6
-RUN cd dist && prisma generate --no-engine
+# Full client (with query engine) for a direct Postgres connection — not Accelerate.
+RUN cd dist && prisma generate
 
 # Set after the build so npm ci still installs devDependencies above.
 ENV NODE_ENV=production
