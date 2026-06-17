@@ -48,8 +48,10 @@ SRC='postgres://USER:PASSWORD@db.prisma.io:5432/DBNAME?sslmode=require' \
   docker run --rm -e SRC postgres:17-alpine \
   sh -c 'pg_dump "$SRC" --no-owner --no-privileges' > soupi_dev.sql
 
-# Load it into the self-hosted db (creates schema, data, and _prisma_migrations)
-docker exec -i soupi_dev_db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < soupi_dev.sql
+# Load it into the self-hosted db (creates schema, data, and _prisma_migrations).
+# Pass the user/db from .env.<env> as LITERALS — POSTGRES_* aren't in your shell
+# unless you export them (empty -> psql tries to connect as "root").
+docker exec -i soupi_dev_db psql -U soupi -d soupi_dev < soupi_dev.sql
 ```
 
 Then bring up the full stack — `prisma migrate deploy` runs on start
