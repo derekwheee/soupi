@@ -83,9 +83,14 @@ served at `/docs`.
 
 ## Deployment
 
-A `Dockerfile` builds the app and installs Chromium (for Puppeteer) and the
-Python venv. The API is moving **off Railway to a self-hosted Debian server**
-(Docker Compose behind a Cloudflare Tunnel), with **self-hosted PostgreSQL** —
-which entails dropping the Prisma Accelerate extension (`prisma/index.ts`,
-`prisma/seed.ts`) and pointing `DATABASE_URL` at the direct Postgres instance.
-Separate **dev** and **prod** environments use their own database and Clerk keys.
+Self-hosted on a Debian server as a Docker Compose stack — **PostgreSQL + API +
+Cloudflare Tunnel** — with isolated `dev` and `prod` stacks (own database, Clerk
+keys, and tunnel). The API connects to Postgres directly (no Prisma Accelerate).
+
+```bash
+cp .env.deploy.example .env.dev     # fill in; likewise .env.prod
+npm run deploy dev                  # or: docker compose --env-file .env.dev up -d --build
+```
+
+See **[DEPLOY.md](./DEPLOY.md)** for the full runbook (provisioning, the one-time
+data migration off Prisma Postgres, Cloudflare ingress, and operations).

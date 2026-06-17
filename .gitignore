@@ -2,9 +2,10 @@ node_modules/
 dist/
 coverage/
 
-# Env files — keep the tracked template, ignore real ones (.env, .env-docker, .env.local, …)
+# Env files — keep the tracked templates, ignore real ones (.env, .env.dev, .env.prod, …)
 .env*
 !.env.example
+!.env.deploy.example
 
 *.log
 .DS_Store

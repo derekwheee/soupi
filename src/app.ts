@@ -25,6 +25,10 @@ const app = express();
 // rate limiting key off the real client IP (via X-Forwarded-For).
 app.set('trust proxy', 1);
 
+// Health check before auth/parsing middleware: it reflects the app's own health
+// (DB connectivity) and must work even if Clerk is down or misconfigured.
+app.use('/health', healthRoutes);
+
 // Strict rate limit for AI endpoints (OpenAI cost protection)
 const aiRateLimit = rateLimit({
     legacyHeaders: false,
@@ -54,7 +58,6 @@ app.use(pinoHttp({ logger }));
 app.use(clerkMiddleware({ debug: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/health', healthRoutes);
 app.use('/docs', docsRoutes);
 app.use('/meta', metaRoutes);
 app.use('/user', generalRateLimit, userRoutes);

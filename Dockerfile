@@ -48,19 +48,24 @@ RUN if [ -f python/requirements.txt ]; then pip install -r python/requirements.t
 RUN chmod +x python/parser.py python/scraper.py
 
 RUN npm run build
-COPY ./prisma/schema ./dist/prisma/schema
 
-RUN npm install -g prisma@6
-# Full client (with query engine) for a direct Postgres connection — not Accelerate.
-RUN cd dist && prisma generate
+# Generate the Prisma client with the full query engine (direct Postgres, not
+# Accelerate). Use the project's pinned prisma (npx) so the CLI version matches
+# @prisma/client — a mismatched global prisma fails to resolve engine files.
+RUN npx prisma generate
 
 # Set after the build so npm ci still installs devDependencies above.
 ENV NODE_ENV=production
 ENV PORT=8080
+
+# Entrypoint runs prisma migrate deploy (RUN_MIGRATIONS=true) before the server.
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Drop root: run as an unprivileged user (Chromium launches with --no-sandbox).
 RUN useradd --create-home --uid 10001 appuser \
     && chown -R appuser:appuser /app /opt/venv
 USER appuser
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "dist/src/server.js"]
