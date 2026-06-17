@@ -32,14 +32,21 @@ Start just the database, then dump from the current Prisma Postgres (use the
 the API **not yet running** so schema + data + Prisma migration history all come
 from the dump.
 
+Pass `--env-file .env.<env>` on **every** `docker compose` command (otherwise
+`POSTGRES_*` are blank and the DB initializes with wrong creds). Use a `pg_dump`
+image whose major version **matches the source server** (Prisma Postgres is
+currently PG17, so the `db` service and the dump both use `postgres:17`).
+
 ```bash
 # Bring up only Postgres
 docker compose --env-file .env.dev up -d db
 
-# Dump the source DB (run from anywhere with access to db.prisma.io)
-SRC='postgres://…@db.prisma.io:5432/…'          # old DEV_POSTGRES_URL / PROD_POSTGRES_URL
-docker run --rm postgres:16-alpine pg_dump "$SRC" \
-  --no-owner --no-privileges > soupi_dev.sql
+# Dump the source DB. `-e SRC` forwards the URL into the container (keeps it out
+# of the process list); the prefixed assignment alone wouldn't expand in `$SRC`.
+# Use the exact direct DEV_POSTGRES_URL / PROD_POSTGRES_URL (not the Accelerate URL).
+SRC='postgres://USER:PASSWORD@db.prisma.io:5432/DBNAME?sslmode=require' \
+  docker run --rm -e SRC postgres:17-alpine \
+  sh -c 'pg_dump "$SRC" --no-owner --no-privileges' > soupi_dev.sql
 
 # Load it into the self-hosted db (creates schema, data, and _prisma_migrations)
 docker exec -i soupi_dev_db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < soupi_dev.sql
