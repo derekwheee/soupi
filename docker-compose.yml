@@ -1,0 +1,73 @@
+# Self-hosted soupi stack: PostgreSQL + API + Cloudflare Tunnel.
+# One stack per environment, selected by an env file that sets ENV (dev|prod):
+#   npm run deploy dev        # or: docker compose --env-file .env.dev up -d --build
+#   npm run deploy prod
+# Names are suffixed with ${ENV} so dev and prod can run side by side on one host.
+name: soupi-${ENV:-dev}
+
+services:
+    db:
+        image: postgres:16-alpine
+        container_name: soupi_${ENV:-dev}_db
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            POSTGRES_DB: ${POSTGRES_DB}
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+            interval: 10s
+            timeout: 5s
+            retries: 10
+        networks:
+            - soupi_net
+
+    api:
+        build: .
+        image: soupi:${ENV:-dev}
+        container_name: soupi_${ENV:-dev}_api
+        restart: unless-stopped
+        # Runtime config (DATABASE_URL -> db service, Clerk, OpenAI, etc.)
+        env_file:
+            - .env.${ENV:-dev}
+        depends_on:
+            db:
+                condition: service_healthy
+        # localhost-only host port for on-server smoke tests; the public path is the tunnel.
+        ports:
+            - '127.0.0.1:${API_PORT:-8080}:8080'
+        networks:
+            - soupi_net
+        healthcheck:
+            test:
+                - CMD
+                - node
+                - -e
+                - "require('http').get('http://localhost:8080/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+
+    # In Zero Trust, point the public hostname's ingress at: http://soupi_${ENV}_api:8080
+    tunnel:
+        image: cloudflare/cloudflared:latest
+        container_name: soupi_${ENV:-dev}_tunnel
+        restart: unless-stopped
+        command: tunnel --no-autoupdate run
+        env_file:
+            - .env.${ENV:-dev} # provides TUNNEL_TOKEN
+        depends_on:
+            - api
+        networks:
+            - soupi_net
+
+volumes:
+    pgdata:
+        name: soupi_${ENV:-dev}_pgdata
+
+networks:
+    soupi_net:
+        name: soupi_${ENV:-dev}_net
