@@ -65,15 +65,18 @@ export async function upsertPantryItem(
 
             const { id, ...data } = item;
 
+            // Match the row to update: by id when the client knows it, otherwise
+            // by name within this pantry. Must exclude soft-deleted rows and scope
+            // to the pantry — otherwise a same-named ghost (or any other item) is
+            // matched and the edit lands on the wrong row (lost update).
             const existing = await prisma.pantryItem.findFirst({
-                where: {
-                    OR: [id ? { id } : {}, { name: item.name }],
-                },
+                where: id ? { id } : { deletedAt: null, name: item.name, pantryId: item.pantryId },
             });
 
             if (existing) {
                 return prisma.pantryItem.update({
                     data,
+                    include: { category: true },
                     where: { id: existing.id },
                 });
             }

@@ -12,9 +12,18 @@ const router = Router();
 router.get(
     '/',
     requireAuth(),
-    handle((req) => {
+    handle(async (req, res) => {
         const { userId } = getAuth(req);
-        return userService.getById(userId!);
+        const user = await userService.getById(userId!);
+        // The client (and sous-swift) treat a thrown/4xx GET /user as "not synced
+        // yet" and fall back to POST /user/sync. Returning null here is a 200 with
+        // an empty body, so that fallback never fires and a first-time user is
+        // left with no household.
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+        return user;
     }),
 );
 

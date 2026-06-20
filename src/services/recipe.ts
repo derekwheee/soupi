@@ -108,7 +108,7 @@ export async function createRecipeFromUrl(
 }
 
 export async function deleteRecipe(householdId: number, id: number): Promise<void> {
-    broadcast<void>(householdId, SSEMessageType.RECIPE_DELETE, 'deleteRecipe', async () => {
+    await broadcast<void>(householdId, SSEMessageType.RECIPE_DELETE, 'deleteRecipe', async () => {
         await prisma.recipe.update({
             data: { deletedAt: new Date() },
             where: { householdId, id },

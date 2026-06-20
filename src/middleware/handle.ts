@@ -9,7 +9,16 @@ export function handle(fn: (req: Request, res: Response) => unknown) {
         try {
             const result = await fn(req, res);
 
-            if (result === undefined) return;
+            // The handler already sent its own response (e.g. parseBody's 400).
+            if (res.headersSent) return;
+
+            // Void handlers (delete, connect/disconnect, etc.) resolve to
+            // undefined — reply 204 so the client isn't left hanging until it
+            // times out.
+            if (result === undefined) {
+                res.status(204).end();
+                return;
+            }
 
             if (typeof result !== 'object' || result === null) {
                 res.status(200).send(result);

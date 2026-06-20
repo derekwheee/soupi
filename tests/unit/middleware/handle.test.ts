@@ -13,9 +13,10 @@ import { handle, parseBody } from '../../../src/middleware/handle';
 function mockReqRes(params: Record<string, string> = {}) {
     const json = vi.fn();
     const send = vi.fn();
-    const status = vi.fn().mockReturnValue({ json, send });
+    const end = vi.fn();
+    const status = vi.fn().mockReturnValue({ end, json, send });
     const req = { params } as never;
-    const res = { json, send, status } as never;
+    const res = { end, headersSent: false, json, send, status } as never;
     return { req, res };
 }
 
@@ -77,14 +78,26 @@ describe('handle()', () => {
         expect(res.status().send).toHaveBeenCalledWith('plain text');
     });
 
-    it('returns early without response when fn returns undefined', async () => {
+    it('sends 204 when fn returns undefined', async () => {
         const { req, res } = mockReqRes();
         const handler = handle(vi.fn().mockResolvedValue(undefined));
 
         await handler(req, res);
 
         expect(res.json).not.toHaveBeenCalled();
+        expect(res.status).toHaveBeenCalledWith(204);
+        expect(res.status().end).toHaveBeenCalled();
+    });
+
+    it('does not double-respond when the handler already sent a response', async () => {
+        const { req, res } = mockReqRes();
+        (res as { headersSent: boolean }).headersSent = true;
+        const handler = handle(vi.fn().mockResolvedValue(undefined));
+
+        await handler(req, res);
+
         expect(res.status).not.toHaveBeenCalled();
+        expect(res.json).not.toHaveBeenCalled();
     });
 
     it('returns 500 with error message when fn throws an Error', async () => {
