@@ -23,7 +23,7 @@ export async function getPantries(householdId: number): Promise<Pantry> {
     // TODO: Get user's default pantry
     return prisma.pantry.findFirstOrThrow({
         include: {
-            itemCategories: { orderBy: { sortOrder: 'asc' } },
+            itemCategories: { orderBy: { sortOrder: 'asc' }, where: { deletedAt: null } },
             pantryItems: {
                 include: { category: true },
                 orderBy: { id: 'asc' },

@@ -22,7 +22,12 @@ describe('getPantries()', () => {
         const result = await getPantries(1);
 
         expect(prismaMock.pantry.findFirstOrThrow).toHaveBeenCalledWith(
-            expect.objectContaining({ where: { householdId: 1 } }),
+            expect.objectContaining({
+                include: expect.objectContaining({
+                    itemCategories: expect.objectContaining({ where: { deletedAt: null } }),
+                }),
+                where: { householdId: 1 },
+            }),
         );
         expect(result.id).toBe(1);
     });
