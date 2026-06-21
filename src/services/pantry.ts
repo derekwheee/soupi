@@ -65,6 +65,12 @@ export async function upsertPantryItem(
 
             const { id, ...data } = item;
 
+            // An out-of-stock item is no longer in the pantry, so any expiration
+            // date is meaningless — clear it whenever stock is set to false.
+            if (data.isInStock === false) {
+                data.expiresAt = null;
+            }
+
             // Match the row to update: by id when the client knows it, otherwise
             // by name within this pantry. Must exclude soft-deleted rows and scope
             // to the pantry — otherwise a same-named ghost (or any other item) is

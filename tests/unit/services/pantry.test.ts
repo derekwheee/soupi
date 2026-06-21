@@ -75,6 +75,22 @@ describe('upsertPantryItem()', () => {
         );
     });
 
+    it('clears the expiration date when an item is marked out of stock', async () => {
+        prismaMock.pantry.findUniqueOrThrow.mockResolvedValue(mockPantry as any);
+        prismaMock.pantryItem.findFirst.mockResolvedValue(mockPantryItem);
+        prismaMock.pantryItem.update.mockResolvedValue({ ...mockPantryItem, isInStock: false });
+
+        await upsertPantryItem(1, {
+            ...baseItem,
+            expiresAt: new Date('2025-12-01'),
+            isInStock: false,
+        });
+
+        expect(prismaMock.pantryItem.update).toHaveBeenCalledWith(
+            expect.objectContaining({ data: expect.objectContaining({ expiresAt: null }) }),
+        );
+    });
+
     it('updates existing item when found by id', async () => {
         prismaMock.pantry.findUniqueOrThrow.mockResolvedValue(mockPantry as any);
         prismaMock.pantryItem.findFirst.mockResolvedValue(mockPantryItem);
