@@ -3,16 +3,19 @@ import { User } from '@prisma/client';
 
 import prisma from '../../prisma';
 import { DEFAULT_CATEGORIES, SSEMessageType } from '../../utils/constants';
+import { generateUniqueJoinCode } from '../../utils/joinCode';
 import { broadcast } from '../../utils/sse';
 
 export async function createUser(user: ClerkUser): Promise<User> {
     return prisma.$transaction(async (tx) => {
+        const joinToken = await generateUniqueJoinCode(tx);
         const created = await tx.user.create({
             data: {
                 clerkId: user.id,
                 email: user.emailAddresses?.[0]?.emailAddress || '',
                 households: {
                     create: {
+                        joinToken,
                         name: 'My Household',
                         pantries: {
                             create: {

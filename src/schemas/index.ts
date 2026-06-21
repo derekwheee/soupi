@@ -56,5 +56,7 @@ export const UpdateUserSchema = z.object({
 });
 
 export const JoinHouseholdSchema = z.object({
-    joinToken: z.string().uuid(),
+    // Friendly codes like FERN-2931 (was a UUID); just require a non-empty
+    // string and let the service normalize/look it up.
+    joinToken: z.string().trim().min(1),
 });

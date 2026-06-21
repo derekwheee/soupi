@@ -18,14 +18,15 @@ const mockHousehold = {
 };
 
 describe('joinHousehold()', () => {
-    it('fetches household by id and joinToken then runs transaction', async () => {
+    it('normalizes the join token then fetches by id and joinToken and runs transaction', async () => {
         prismaMock.household.findUniqueOrThrow.mockResolvedValue(mockHousehold);
         prismaMock.$transaction.mockResolvedValue([null, mockHousehold] as never);
 
-        const result = await joinHousehold('user_1', 1, 'token-abc');
+        // Pass a lowercase/whitespace token; it should be trimmed + uppercased.
+        const result = await joinHousehold('user_1', 1, '  fern-2931 ');
 
         expect(prismaMock.household.findUniqueOrThrow).toHaveBeenCalledWith({
-            where: { id: 1, joinToken: 'token-abc' },
+            where: { id: 1, joinToken: 'FERN-2931' },
         });
         expect(prismaMock.$transaction).toHaveBeenCalledOnce();
         expect(result).toEqual(mockHousehold);

@@ -197,14 +197,21 @@ describe('UpdateUserSchema', () => {
 });
 
 describe('JoinHouseholdSchema', () => {
-    it('accepts valid UUID', () => {
+    it('accepts a friendly join code', () => {
+        expect(JoinHouseholdSchema.safeParse({ joinToken: 'FERN-2931' }).success).toBe(true);
+    });
+    it('still accepts a legacy UUID token', () => {
         expect(
             JoinHouseholdSchema.safeParse({ joinToken: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' })
                 .success,
         ).toBe(true);
     });
-    it('rejects non-UUID string', () => {
-        expect(JoinHouseholdSchema.safeParse({ joinToken: 'not-a-uuid' }).success).toBe(false);
+    it('trims surrounding whitespace', () => {
+        const result = JoinHouseholdSchema.safeParse({ joinToken: '  FERN-2931 ' });
+        expect(result.success && result.data.joinToken).toBe('FERN-2931');
+    });
+    it('rejects an empty join token', () => {
+        expect(JoinHouseholdSchema.safeParse({ joinToken: '   ' }).success).toBe(false);
     });
     it('rejects missing joinToken', () => {
         expect(JoinHouseholdSchema.safeParse({}).success).toBe(false);

@@ -8,8 +8,10 @@ export async function joinHousehold(
     joinToken: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<Prisma.HouseholdGetPayload<{ include?: any }>> {
+    // Join codes are stored uppercase (e.g. FERN-2931); normalize so a
+    // hand-typed lowercase code or stray whitespace still matches.
     const household = await prisma.household.findUniqueOrThrow({
-        where: { id: householdId, joinToken },
+        where: { id: householdId, joinToken: joinToken.trim().toUpperCase() },
     });
 
     const [, joinedHousehold] = await prisma.$transaction([
