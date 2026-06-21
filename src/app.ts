@@ -41,6 +41,18 @@ const aiRateLimit = rateLimit({
 // General rate limit for all other routes
 const generalRateLimit = rateLimit({
     legacyHeaders: false,
+    limit: 600,
+    message: { error: 'Too many requests, please try again later.' },
+    standardHeaders: 'draft-8',
+    windowMs: 15 * 60 * 1000,
+});
+
+// SSE streams reconnect over time (proxy timeouts, token refresh, network
+// changes), so each reconnect would spend a general-API slot. Give them their
+// own generous bucket so the live stream can't starve normal requests (or vice
+// versa).
+const streamRateLimit = rateLimit({
+    legacyHeaders: false,
     limit: 300,
     message: { error: 'Too many requests, please try again later.' },
     standardHeaders: 'draft-8',
@@ -67,7 +79,7 @@ app.use('/', generalRateLimit, pantryRoutes);
 app.use('/', generalRateLimit, shoppingListRoutes);
 app.use('/', generalRateLimit, categoryRoutes);
 app.use('/', generalRateLimit, planRoutes);
-app.use('/events', generalRateLimit, eventRoutes);
+app.use('/events', streamRateLimit, eventRoutes);
 app.use('/ai', aiRateLimit, aiRoutes);
 
 export default app;
